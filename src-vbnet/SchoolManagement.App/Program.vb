@@ -37,8 +37,8 @@ Public Module Program
     Private Sub ConfigureServices(services As IServiceCollection)
         ' Repositories
         services.AddScoped(Of IStudentRepository, StudentRepository)()
-        ' services.AddScoped(Of ITeacherRepository, TeacherRepository)()
-        ' services.AddScoped(Of IFinanceRepository, FinanceRepository)()
+        services.AddScoped(Of ITeacherRepository, TeacherRepository)()
+        services.AddScoped(Of IFinanceRepository, FinanceRepository)()
         
         ' Forms
         services.AddTransient(Of MainForm)()

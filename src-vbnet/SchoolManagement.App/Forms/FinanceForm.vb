@@ -1,6 +1,10 @@
 Imports System
+Imports System.Linq
+Imports System.Threading.Tasks
 Imports System.Windows.Forms
 Imports SchoolManagement.App.Helpers
+Imports SchoolManagement.Core.Entities
+Imports SchoolManagement.Core.Interfaces
 
 Namespace Forms
     ''' <summary>
@@ -10,12 +14,20 @@ Namespace Forms
     Partial Public Class FinanceForm
         Inherits Form
 
+        Private ReadOnly _financeRepository As IFinanceRepository
+
         Public Sub New()
             InitializeComponent()
+        End Sub
 
+        Public Sub New(financeRepository As IFinanceRepository)
+            Me.New()
+            
             If DesignModeHelper.IsInDesignMode(Me) Then Return
-
-            LoadInitialData()
+            
+            _financeRepository = financeRepository
+            
+            AddHandler Me.Load, AddressOf OnFormLoad
             WireEvents()
         End Sub
 
@@ -26,31 +38,52 @@ Namespace Forms
             AddHandler cboFilterStatus.SelectedIndexChanged, AddressOf OnFilterChanged
         End Sub
 
-        Private Sub LoadInitialData()
+        Private Async Sub OnFormLoad(sender As Object, e As EventArgs)
             cboFilterStatus.SelectedIndex = 0
-            PopulateTable()
+            Await PopulateTableAsync()
+            Await LoadSummaryAsync()
         End Sub
 
-        Private Sub PopulateTable()
-            dgvFinance.Rows.Clear()
-            dgvFinance.Rows.Add("INV-2025-001", "مصطفى علي حسين الزبيدي", "القسط السنوي - الدفعة الأولى", "1,250,000 د.ع", "1,250,000 د.ع", "0 د.ع", "2024/10/01", "مسدد بالكامل")
-            dgvFinance.Rows.Add("INV-2025-002", "مصطفى علي حسين الزبيدي", "القسط السنوي - الدفعة الثانية", "1,250,000 د.ع", "500,000 د.ع", "750,000 د.ع", "2025/02/01", "مسدد جزئياً")
-            dgvFinance.Rows.Add("INV-2025-003", "سجاد حيدر عبد الحسن السعدي", "القسط السنوي - كامل", "2,500,000 د.ع", "2,500,000 د.ع", "0 د.ع", "2024/09/15", "مسدد بالكامل")
-            dgvFinance.Rows.Add("INV-2025-004", "أحمد فراس نوري العامري", "القسط السنوي - الدفعة الأولى", "1,250,000 د.ع", "0 د.ع", "1,250,000 د.ع", "2024/10/01", "غير مسدد (مستحق)")
-            dgvFinance.Rows.Add("INV-2025-005", "يوسف عمر خطاب الجبوري", "أجور خط النقل المدرسي", "200,000 د.ع", "200,000 د.ع", "0 د.ع", "2024/11/01", "مسدد بالكامل")
-            dgvFinance.Rows.Add("INV-2025-006", "كرار سلام ضياء الربيعي", "رسوم الزي المدرسي والكتب", "150,000 د.ع", "150,000 د.ع", "0 د.ع", "2024/09/20", "مسدد بالكامل")
-        End Sub
+        Private Async Function PopulateTableAsync() As Task
+            Try
+                dgvFinance.Rows.Clear()
+                Dim filterStatus = If(cboFilterStatus.SelectedIndex > 0, cboFilterStatus.SelectedItem.ToString(), "ALL")
+                Dim invoices = Await _financeRepository.GetInvoicesAsync(filterStatus)
+                
+                For Each inv In invoices
+                    dgvFinance.Rows.Add(
+                        inv.InvoiceNumber,
+                        $"طالب {inv.StudentId}", ' To Do: Get real student name via JOIN
+                        inv.FeeType,
+                        $"{inv.FinalAmount:N0} د.ع",
+                        $"{inv.PaidAmount:N0} د.ع",
+                        $"{inv.RemainingAmount:N0} د.ع",
+                        inv.DueDate?.ToString("yyyy/MM/dd"),
+                        inv.Status
+                    )
+                Next
+            Catch ex As Exception
+                MessageBox.Show($"تعذر تحميل البيانات المالية: {ex.Message}", "خطأ", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            End Try
+        End Function
 
-        Private Sub OnFilterChanged(sender As Object, e As EventArgs)
-            Dim filter = Convert.ToString(cboFilterStatus.SelectedItem)
-            For Each row As DataGridViewRow In dgvFinance.Rows
-                Dim st = Convert.ToString(row.Cells("colInvStatus").Value)
-                row.Visible = (cboFilterStatus.SelectedIndex = 0) OrElse (st = filter)
-            Next
+        Private Async Function LoadSummaryAsync() As Task
+            Try
+                Dim summary = Await _financeRepository.GetFinancialSummaryAsync()
+                lblTotalInvoiced.Text = $"{summary("TotalInvoiced"):N0} د.ع"
+                lblTotalCollected.Text = $"{summary("TotalCollected"):N0} د.ع"
+                lblTotalRemaining.Text = $"{summary("TotalRemaining"):N0} د.ع"
+            Catch ex As Exception
+                Console.WriteLine($"Summary load failed: {ex.Message}")
+            End Try
+        End Function
+
+        Private Async Sub OnFilterChanged(sender As Object, e As EventArgs)
+            Await PopulateTableAsync()
         End Sub
 
         Private Sub BtnNewInvoice_Click(sender As Object, e As EventArgs)
-            MessageBox.Show("إنشاء مطالبة مالية / قسط دراسي جديد للطالب.", "إنشاء مطالبة", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            MessageBox.Show("سيتم إدراج شاشة تفاصيل الفاتورة قريباً.", "إنشاء مطالبة", MessageBoxButtons.OK, MessageBoxIcon.Information)
         End Sub
 
         Private Sub BtnRecordPayment_Click(sender As Object, e As EventArgs)
@@ -58,7 +91,7 @@ Namespace Forms
                 MessageBox.Show("يرجى تحديد الفاتورة لتسجيل سند القبض.", "تنبيه", MessageBoxButtons.OK, MessageBoxIcon.Warning)
                 Return
             End If
-            MessageBox.Show("تسجيل دفعة نقدية / سند قبض في الصندوق المالي للمدرسة.", "سند قبض", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            MessageBox.Show("سيتم إدراج شاشة سندات القبض قريباً.", "سند قبض", MessageBoxButtons.OK, MessageBoxIcon.Information)
         End Sub
 
         Private Sub BtnPrintReceipt_Click(sender As Object, e As EventArgs)

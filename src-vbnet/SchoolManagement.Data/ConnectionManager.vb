@@ -23,7 +23,7 @@ Namespace Infrastructure
             Return connStr
         End Function
 
-        Public Shared Function CreateConnection() As IDbConnection
+        Public Shared Function CreateConnection() As SqlConnection
             Dim conn = New SqlConnection(GetConnectionString())
             Return conn
         End Function

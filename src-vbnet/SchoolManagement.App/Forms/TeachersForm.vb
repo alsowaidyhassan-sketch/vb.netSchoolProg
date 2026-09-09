@@ -1,7 +1,10 @@
 Imports System
+Imports System.Linq
+Imports System.Threading.Tasks
 Imports System.Windows.Forms
 Imports SchoolManagement.App.Helpers
 Imports SchoolManagement.Core.Entities
+Imports SchoolManagement.Core.Interfaces
 
 Namespace Forms
     ''' <summary>
@@ -10,12 +13,20 @@ Namespace Forms
     Partial Public Class TeachersForm
         Inherits Form
 
+        Private ReadOnly _teacherRepository As ITeacherRepository
+
         Public Sub New()
             InitializeComponent()
+        End Sub
 
+        Public Sub New(teacherRepository As ITeacherRepository)
+            Me.New()
+            
             If DesignModeHelper.IsInDesignMode(Me) Then Return
-
-            LoadInitialData()
+            
+            _teacherRepository = teacherRepository
+            
+            AddHandler Me.Load, AddressOf OnFormLoad
             WireEvents()
         End Sub
 
@@ -25,65 +36,102 @@ Namespace Forms
             AddHandler txtSearch.TextChanged, AddressOf TxtSearch_TextChanged
         End Sub
 
-        Private Sub LoadInitialData()
-            dgvTeachers.Rows.Clear()
-            dgvTeachers.Rows.Add("TCH-101", "أ. د. عبد الرحمن محمد علي الحديثي", "اللغة العربية", "دكتوراه", "07802233445", "18 حصة", "مستمر")
-            dgvTeachers.Rows.Add("TCH-102", "أ. حيدر جاسم كاظم الخفاجي", "الرياضيات", "ماجستير", "07703344556", "20 حصة", "مستمر")
-            dgvTeachers.Rows.Add("TCH-103", "أ. وسام عادل نصيف التميمي", "الفيزياء", "بكالوريوس", "07504455667", "16 حصة", "مستمر")
-            dgvTeachers.Rows.Add("TCH-104", "أ. طارق مهدي حسين المشهداني", "اللغة الإنجليزية", "ماجستير", "07815566778", "18 حصة", "مستمر")
-            lblTeacherCount.Text = $"إجمالي عدد الكادر التدريسي: {dgvTeachers.Rows.Count} معلمين"
+        Private Async Sub OnFormLoad(sender As Object, e As EventArgs)
+            Await LoadInitialDataAsync()
         End Sub
 
-        Private Sub BtnAddTeacher_Click(sender As Object, e As EventArgs)
+        Private Async Function LoadInitialDataAsync() As Task
+            Try
+                dgvTeachers.Rows.Clear()
+                Dim teachers = Await _teacherRepository.GetAllAsync()
+                
+                For Each t In teachers
+                    dgvTeachers.Rows.Add(
+                        t.EmployeeNumber,
+                        t.FullName,
+                        t.Specialization,
+                        t.AcademicDegree,
+                        t.Phone,
+                        $"{t.WeeklyQuotaHours} حصة",
+                        t.Status
+                    )
+                Next
+                
+                lblTeacherCount.Text = $"إجمالي عدد الكادر التدريسي: {dgvTeachers.Rows.Count} معلمين"
+            Catch ex As Exception
+                MessageBox.Show($"حدث خطأ أثناء تحميل بيانات المدرسين: {ex.Message}", "خطأ", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            End Try
+        End Function
+
+        Private Async Sub BtnAddTeacher_Click(sender As Object, e As EventArgs)
             Using frm As New TeacherEditForm()
                 If frm.ShowDialog() = DialogResult.OK Then
                     Dim t = frm.CurrentTeacher
-                    dgvTeachers.Rows.Add(
-                        If(String.IsNullOrWhiteSpace(t.StaffId), $"TCH-{dgvTeachers.Rows.Count + 101}", t.StaffId),
-                        t.FullName,
-                        t.Specialization,
-                        "بكالوريوس",
-                        t.Phone,
-                        $"{t.WeeklyQuotaHours} حصة",
-                        "مستمر"
-                    )
-                    lblTeacherCount.Text = $"إجمالي عدد الكادر التدريسي: {dgvTeachers.Rows.Count} معلمين"
+                    t.EmployeeNumber = If(String.IsNullOrWhiteSpace(t.EmployeeNumber), $"TCH-{DateTime.Now.Year}-{New Random().Next(100, 999)}", t.EmployeeNumber)
+                    
+                    Try
+                        Await _teacherRepository.AddAsync(t)
+                        Await LoadInitialDataAsync()
+                    Catch ex As Exception
+                        MessageBox.Show($"تعذر إضافة المدرس: {ex.Message}", "خطأ", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                    End Try
                 End If
             End Using
         End Sub
 
-        Private Sub BtnEditTeacher_Click(sender As Object, e As EventArgs)
+        Private Async Sub BtnEditTeacher_Click(sender As Object, e As EventArgs)
             If dgvTeachers.SelectedRows.Count = 0 Then
                 MessageBox.Show("يرجى تحديد مدرس للتعديل.", "تنبيه", MessageBoxButtons.OK, MessageBoxIcon.Warning)
                 Return
             End If
-
+            
             Dim row = dgvTeachers.SelectedRows(0)
-            Dim t As New Teacher With {
-                .StaffId = If(Convert.ToString(row.Cells("colStaffId").Value), String.Empty),
-                .FullName = If(Convert.ToString(row.Cells("colTeacherName").Value), String.Empty),
-                .FirstName = If(Convert.ToString(row.Cells("colTeacherName").Value), String.Empty),
-                .Specialization = If(Convert.ToString(row.Cells("colSpecialization").Value), String.Empty),
-                .Phone = If(Convert.ToString(row.Cells("colPhone").Value), String.Empty)
-            }
-
-            Using frm As New TeacherEditForm(t)
-                If frm.ShowDialog() = DialogResult.OK Then
-                    row.Cells("colTeacherName").Value = frm.CurrentTeacher.FullName
-                    row.Cells("colSpecialization").Value = frm.CurrentTeacher.Specialization
-                    row.Cells("colPhone").Value = frm.CurrentTeacher.Phone
+            Dim empNumber = Convert.ToString(row.Cells("colStaffId").Value)
+            
+            Try
+                Dim teacher = Await _teacherRepository.GetByEmployeeNumberAsync(empNumber)
+                If teacher Is Nothing Then
+                    MessageBox.Show("لم يتم العثور على المدرس في قاعدة البيانات.", "خطأ", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                    Return
                 End If
-            End Using
+
+                Using frm As New TeacherEditForm(teacher)
+                    If frm.ShowDialog() = DialogResult.OK Then
+                        Await _teacherRepository.UpdateAsync(frm.CurrentTeacher)
+                        Await LoadInitialDataAsync()
+                    End If
+                End Using
+            Catch ex As Exception
+                MessageBox.Show($"تعذر تعديل بيانات المدرس: {ex.Message}", "خطأ", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            End Try
         End Sub
 
-        Private Sub TxtSearch_TextChanged(sender As Object, e As EventArgs)
+        Private Async Sub TxtSearch_TextChanged(sender As Object, e As EventArgs)
             Dim term = txtSearch.Text.Trim().ToLower()
-            For Each row As DataGridViewRow In dgvTeachers.Rows
-                Dim name = Convert.ToString(row.Cells("colTeacherName").Value).ToLower()
-                Dim spec = Convert.ToString(row.Cells("colSpecialization").Value).ToLower()
-                Dim phone = Convert.ToString(row.Cells("colPhone").Value).ToLower()
-                row.Visible = String.IsNullOrWhiteSpace(term) OrElse name.Contains(term) OrElse spec.Contains(term) OrElse phone.Contains(term)
-            Next
+            Try
+                If String.IsNullOrWhiteSpace(term) Then
+                    Await LoadInitialDataAsync()
+                Else
+                    dgvTeachers.Rows.Clear()
+                    Dim teachers = Await _teacherRepository.GetAllAsync()
+                    Dim filtered = teachers.Where(Function(t) (Not String.IsNullOrWhiteSpace(t.FullName) AndAlso t.FullName.ToLower().Contains(term)) OrElse
+                                                              (Not String.IsNullOrWhiteSpace(t.Specialization) AndAlso t.Specialization.ToLower().Contains(term)) OrElse
+                                                              (Not String.IsNullOrWhiteSpace(t.Phone) AndAlso t.Phone.ToLower().Contains(term)))
+                    For Each t In filtered
+                        dgvTeachers.Rows.Add(
+                            t.EmployeeNumber,
+                            t.FullName,
+                            t.Specialization,
+                            t.AcademicDegree,
+                            t.Phone,
+                            $"{t.WeeklyQuotaHours} حصة",
+                            t.Status
+                        )
+                    Next
+                End If
+            Catch ex As Exception
+                Console.WriteLine($"Search failed: {ex.Message}")
+            End Try
         End Sub
     End Class
 End Namespace

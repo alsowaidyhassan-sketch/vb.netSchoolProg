@@ -9,7 +9,7 @@ Namespace Forms
     ''' متوافقة بالكامل مع Visual Studio Designer
     ''' </summary>
     Partial Public Class StudentProfileForm
-        Inherits Form
+        Inherits Krypton.Toolkit.KryptonForm
 
         Private _student As Student
 

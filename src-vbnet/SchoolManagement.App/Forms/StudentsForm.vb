@@ -38,6 +38,36 @@ Namespace Forms
             AddHandler btnWhatsApp.Click, AddressOf BtnWhatsApp_Click
             AddHandler btnProfile.Click, AddressOf BtnProfile_Click
             AddHandler txtSearch.TextChanged, AddressOf TxtSearch_TextChanged
+            AddHandler dgvStudents.CellDoubleClick, AddressOf DgvStudents_CellDoubleClick
+        End Sub
+
+        Private Async Sub DgvStudents_CellDoubleClick(sender As Object, e As DataGridViewCellEventArgs)
+            If e.RowIndex < 0 Then Return
+            
+            Dim row = dgvStudents.Rows(e.RowIndex)
+            Dim studentNumber = Convert.ToString(row.Cells("colStudentNumber").Value)
+            
+            Try
+                ' Assuming there is a GetByStudentNumberAsync method in repository.
+                ' Wait, earlier we didn't add it. Let's just fetch all and filter for now, or just use NationalId.
+                ' Actually let's use the DB.
+                Dim students = Await _studentRepository.GetAllAsync()
+                Dim student = students.FirstOrDefault(Function(s) s.StudentNumber = studentNumber)
+                
+                If student Is Nothing Then
+                    MessageBox.Show("لم يتم العثور على الطالب في قاعدة البيانات.", "خطأ", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                    Return
+                End If
+
+                Using frm As New StudentEditForm(student)
+                    If frm.ShowDialog() = DialogResult.OK Then
+                        Await _studentRepository.UpdateAsync(frm.CurrentStudent)
+                        Await LoadInitialDataAsync()
+                    End If
+                End Using
+            Catch ex As Exception
+                MessageBox.Show($"تعذر تعديل بيانات الطالب: {ex.Message}", "خطأ", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            End Try
         End Sub
 
         Private Async Sub OnFormLoad(sender As Object, e As EventArgs)

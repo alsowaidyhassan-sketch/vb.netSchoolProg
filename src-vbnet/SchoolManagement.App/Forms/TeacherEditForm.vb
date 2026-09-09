@@ -9,7 +9,7 @@ Namespace Forms
     ''' نافذة إضافة وتعديل بيانات التدريسي - متوافقة بالكامل مع Visual Studio Designer
     ''' </summary>
     Partial Public Class TeacherEditForm
-        Inherits Form
+        Inherits Krypton.Toolkit.KryptonForm
 
         Public Property CurrentTeacher As Teacher
 

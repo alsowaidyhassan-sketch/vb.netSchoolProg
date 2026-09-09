@@ -11,7 +11,7 @@ Namespace Repositories
     Public Class TeacherRepository
         Implements ITeacherRepository
 
-        Private Const SelectColumns As String = "SELECT [Id], [EmployeeNumber], [FullName], [Specialization], [AcademicDegree], [Phone], [Email], [AssignedSubjects], [AssignedClasses], [YearsOfExperience], [BasicSalary], [Allowances], [Status], [CreatedAt], [IsDeleted] FROM [dbo].[Teachers]"
+        Private Const SelectColumns As String = "SELECT [Id], [EmployeeNumber], [FullName], [Specialization], [AcademicDegree], [Phone], [Email], [AssignedSubjects], [AssignedClasses], [YearsOfExperience], [BasicSalary], [Allowances], [WeeklyQuotaHours], [Status], [CreatedAt], [IsDeleted] FROM [dbo].[Teachers]"
 
         Public Async Function GetByIdAsync(id As Integer) As Task(Of Teacher) Implements IRepository(Of Teacher).GetByIdAsync
             Using conn = ConnectionManager.CreateConnection()
@@ -33,11 +33,11 @@ Namespace Repositories
                     INSERT INTO [dbo].[Teachers] (
                         [EmployeeNumber], [FullName], [Specialization], [AcademicDegree],
                         [Phone], [Email], [AssignedSubjects], [AssignedClasses],
-                        [YearsOfExperience], [BasicSalary], [Allowances], [Status], [CreatedAt], [IsDeleted]
+                        [YearsOfExperience], [BasicSalary], [Allowances], [WeeklyQuotaHours], [Status], [CreatedAt], [IsDeleted]
                     ) VALUES (
                         @EmployeeNumber, @FullName, @Specialization, @AcademicDegree,
                         @Phone, @Email, @AssignedSubjects, @AssignedClasses,
-                        @YearsOfExperience, @BasicSalary, @Allowances, @Status, GETDATE(), 0
+                        @YearsOfExperience, @BasicSalary, @Allowances, @WeeklyQuotaHours, @Status, GETDATE(), 0
                     );
                     SELECT CAST(SCOPE_IDENTITY() AS INT);"
                 Return Await conn.ExecuteScalarAsync(Of Integer)(sql, entity)
@@ -58,6 +58,7 @@ Namespace Repositories
                         [YearsOfExperience] = @YearsOfExperience,
                         [BasicSalary] = @BasicSalary,
                         [Allowances] = @Allowances,
+                        [WeeklyQuotaHours] = @WeeklyQuotaHours,
                         [Status] = @Status
                     WHERE [Id] = @Id;"
                 Dim affected = Await conn.ExecuteAsync(sql, entity)

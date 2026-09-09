@@ -54,7 +54,7 @@ Namespace Forms
         End Sub
 
         Private Sub OpenStudentsTab()
-            Dim frm As Program.ServiceProvider.GetRequiredService(Of StudentsForm)()
+            Dim frm = Program.ServiceProvider.GetRequiredService(Of StudentsForm)()
             frm.TopLevel = False
             frm.FormBorderStyle = FormBorderStyle.None
             frm.Dock = DockStyle.Fill
@@ -63,7 +63,7 @@ Namespace Forms
         End Sub
 
         Private Sub BtnNavTeachers_Click(sender As Object, e As EventArgs)
-            Dim frm As Program.ServiceProvider.GetRequiredService(Of TeachersForm)()
+            Dim frm = Program.ServiceProvider.GetRequiredService(Of TeachersForm)()
             frm.TopLevel = False
             frm.FormBorderStyle = FormBorderStyle.None
             frm.Dock = DockStyle.Fill
@@ -72,7 +72,7 @@ Namespace Forms
         End Sub
 
         Private Sub BtnNavAttendance_Click(sender As Object, e As EventArgs)
-            Dim frm As Program.ServiceProvider.GetRequiredService(Of AttendanceForm)()
+            Dim frm = Program.ServiceProvider.GetRequiredService(Of AttendanceForm)()
             frm.TopLevel = False
             frm.FormBorderStyle = FormBorderStyle.None
             frm.Dock = DockStyle.Fill
@@ -81,7 +81,7 @@ Namespace Forms
         End Sub
 
         Private Sub BtnNavClasses_Click(sender As Object, e As EventArgs)
-            Dim frm As Program.ServiceProvider.GetRequiredService(Of ClassesForm)()
+            Dim frm = Program.ServiceProvider.GetRequiredService(Of ClassesForm)()
             frm.TopLevel = False
             frm.FormBorderStyle = FormBorderStyle.None
             frm.Dock = DockStyle.Fill
@@ -90,7 +90,7 @@ Namespace Forms
         End Sub
 
         Private Sub BtnNavSubjects_Click(sender As Object, e As EventArgs)
-            Dim frm As Program.ServiceProvider.GetRequiredService(Of SubjectsForm)()
+            Dim frm = Program.ServiceProvider.GetRequiredService(Of SubjectsForm)()
             frm.TopLevel = False
             frm.FormBorderStyle = FormBorderStyle.None
             frm.Dock = DockStyle.Fill
@@ -99,7 +99,7 @@ Namespace Forms
         End Sub
 
         Private Sub BtnNavExams_Click(sender As Object, e As EventArgs)
-            Dim frm As Program.ServiceProvider.GetRequiredService(Of ExamsForm)()
+            Dim frm = Program.ServiceProvider.GetRequiredService(Of ExamsForm)()
             frm.TopLevel = False
             frm.FormBorderStyle = FormBorderStyle.None
             frm.Dock = DockStyle.Fill
@@ -108,7 +108,7 @@ Namespace Forms
         End Sub
 
         Private Sub BtnNavGrades_Click(sender As Object, e As EventArgs)
-            Dim frm As Program.ServiceProvider.GetRequiredService(Of GradesForm)()
+            Dim frm = Program.ServiceProvider.GetRequiredService(Of GradesForm)()
             frm.TopLevel = False
             frm.FormBorderStyle = FormBorderStyle.None
             frm.Dock = DockStyle.Fill
@@ -117,7 +117,7 @@ Namespace Forms
         End Sub
 
         Private Sub BtnNavFinance_Click(sender As Object, e As EventArgs)
-            Dim frm As Program.ServiceProvider.GetRequiredService(Of FinanceForm)()
+            Dim frm = Program.ServiceProvider.GetRequiredService(Of FinanceForm)()
             frm.TopLevel = False
             frm.FormBorderStyle = FormBorderStyle.None
             frm.Dock = DockStyle.Fill
@@ -126,7 +126,7 @@ Namespace Forms
         End Sub
 
         Private Sub BtnNavReports_Click(sender As Object, e As EventArgs)
-            Dim frm As Program.ServiceProvider.GetRequiredService(Of ReportsForm)()
+            Dim frm = Program.ServiceProvider.GetRequiredService(Of ReportsForm)()
             frm.TopLevel = False
             frm.FormBorderStyle = FormBorderStyle.None
             frm.Dock = DockStyle.Fill
@@ -135,7 +135,7 @@ Namespace Forms
         End Sub
 
         Private Sub BtnNavSettings_Click(sender As Object, e As EventArgs)
-            Dim frm As Program.ServiceProvider.GetRequiredService(Of SettingsForm)()
+            Dim frm = Program.ServiceProvider.GetRequiredService(Of SettingsForm)()
             frm.TopLevel = False
             frm.FormBorderStyle = FormBorderStyle.None
             frm.Dock = DockStyle.Fill

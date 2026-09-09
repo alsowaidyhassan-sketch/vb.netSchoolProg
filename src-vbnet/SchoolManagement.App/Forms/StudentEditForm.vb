@@ -11,7 +11,7 @@ Namespace Forms
     ''' متوافق بالكامل مع Visual Studio Designer
     ''' </summary>
     Partial Public Class StudentEditForm
-        Inherits Form
+        Inherits Krypton.Toolkit.KryptonForm
 
         Public Property CurrentStudent As Student
 
