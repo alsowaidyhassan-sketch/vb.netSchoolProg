@@ -1,3 +1,7 @@
+Imports System
+Imports System.Collections.Generic
+Imports System.Linq
+
 Namespace Entities
     Public Class Student
         Public Property StudentId As Integer

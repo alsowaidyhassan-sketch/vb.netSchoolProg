@@ -9,6 +9,12 @@ Imports SchoolManagement.Data.Infrastructure
 
 Namespace Repositories
 
+    Public Class FinancialSummaryRecord
+        Public Property TotalInvoiced As Decimal
+        Public Property TotalCollected As Decimal
+        Public Property TotalRemaining As Decimal
+    End Class
+
     Public Class FinanceRepository
         Implements IFinanceRepository
 
@@ -53,12 +59,16 @@ Namespace Repositories
                         ISNULL(SUM(PaidAmount), 0) AS TotalCollected,
                         ISNULL(SUM(RemainingAmount), 0) AS TotalRemaining
                     FROM [dbo].[FeeInvoices];"
-                Dim row = Await conn.QueryFirstOrDefaultAsync(sql)
+                Dim summary = Await conn.QueryFirstOrDefaultAsync(Of FinancialSummaryRecord)(sql)
                 Dim dict As New Dictionary(Of String, Decimal)()
-                If row IsNot Nothing Then
-                    dict("TotalInvoiced") = CDec(row.TotalInvoiced)
-                    dict("TotalCollected") = CDec(row.TotalCollected)
-                    dict("TotalRemaining") = CDec(row.TotalRemaining)
+                If summary IsNot Nothing Then
+                    dict("TotalInvoiced") = summary.TotalInvoiced
+                    dict("TotalCollected") = summary.TotalCollected
+                    dict("TotalRemaining") = summary.TotalRemaining
+                Else
+                    dict("TotalInvoiced") = 0D
+                    dict("TotalCollected") = 0D
+                    dict("TotalRemaining") = 0D
                 End If
                 Return dict
             End Using

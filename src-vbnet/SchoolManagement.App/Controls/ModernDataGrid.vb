@@ -5,23 +5,6 @@ Imports System.Windows.Forms
 
 Namespace Controls
     ''' <summary>
-    ''' حقل إدخال عصري مع نص إرشادي وحواف أنيقة
-    ''' متوافق مع مصمم فيجوال ستوديو
-    ''' </summary>
-    <ToolboxItem(True)>
-    Public Class ModernTextBox
-        Inherits TextBox
-
-        Public Sub New()
-            MyBase.New()
-            Me.Font = New Font("Segoe UI", 10.0F, FontStyle.Regular)
-            Me.BackColor = Color.FromArgb(30, 41, 59)
-            Me.ForeColor = Color.White
-            Me.BorderStyle = BorderStyle.FixedSingle
-        End Sub
-    End Class
-
-    ''' <summary>
     ''' جدول بيانات عصري مضبوط افتراضياً بالثيم الداكن والتنسيق الراقي
     ''' </summary>
     <ToolboxItem(True)>

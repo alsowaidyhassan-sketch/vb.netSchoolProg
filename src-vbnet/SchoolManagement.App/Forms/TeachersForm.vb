@@ -60,10 +60,11 @@ Namespace Forms
 
             Dim row = dgvTeachers.SelectedRows(0)
             Dim t As New Teacher With {
-                .StaffId = row.Cells("colStaffId").Value.ToString(),
-                .FirstName = row.Cells("colTeacherName").Value.ToString(),
-                .Specialization = row.Cells("colSpecialization").Value.ToString(),
-                .Phone = row.Cells("colPhone").Value.ToString()
+                .StaffId = If(row.Cells("colStaffId").Value?.ToString(), String.Empty),
+                .FullName = If(row.Cells("colTeacherName").Value?.ToString(), String.Empty),
+                .FirstName = If(row.Cells("colTeacherName").Value?.ToString(), String.Empty),
+                .Specialization = If(row.Cells("colSpecialization").Value?.ToString(), String.Empty),
+                .Phone = If(row.Cells("colPhone").Value?.ToString(), String.Empty)
             }
 
             Using frm As New TeacherEditForm(t)

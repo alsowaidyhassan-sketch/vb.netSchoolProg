@@ -30,7 +30,7 @@ Namespace Services
                 receipt.ReceiptNumber = $"REC-{DateTime.Now.Year}-{New Random().Next(1000, 9999)}"
             End If
 
-            receipt.Date = DateTime.Now
+            receipt.ReceiptDate = DateTime.Now
             receipt.CreatedAt = DateTime.Now
 
             Return Await _financeRepo.AddPaymentReceiptAsync(receipt)
