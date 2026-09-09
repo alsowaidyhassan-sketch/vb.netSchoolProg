@@ -32,6 +32,7 @@ Namespace Interfaces
 
     Public Interface IFinanceRepository
         Function GetInvoicesAsync(status As String) As Task(Of IEnumerable(Of FeeInvoice))
+        Function AddInvoiceAsync(invoice As FeeInvoice) As Task(Of Integer)
         Function GetReceiptsAsync(fromDate As DateTime?, toDate As DateTime?) As Task(Of IEnumerable(Of PaymentReceipt))
         Function AddPaymentReceiptAsync(receipt As PaymentReceipt) As Task(Of Integer)
         Function GetFinancialSummaryAsync() As Task(Of IDictionary(Of String, Decimal))

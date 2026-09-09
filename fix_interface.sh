@@ -1,0 +1,1 @@
+sed -i '/Function GetInvoicesAsync(status As String) As Task(Of IEnumerable(Of FeeInvoice))/a\        Function AddInvoiceAsync(invoice As FeeInvoice) As Task(Of Integer)' src-vbnet/SchoolManagement.Core/Interfaces/IRepositories.vb

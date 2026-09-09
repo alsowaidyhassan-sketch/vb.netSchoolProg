@@ -5,6 +5,7 @@ Imports Dapper
 Imports Microsoft.Data.SqlClient
 Imports SchoolManagement.Core.Entities
 Imports SchoolManagement.Core.Interfaces
+Imports SchoolManagement.Data.Infrastructure
 
 Namespace Repositories
     Public Class FinanceRepository
@@ -71,7 +72,7 @@ Namespace Repositories
             End Using
         End Function
 
-        Public Async Function GetFinancialSummaryAsync() As Task(Of Dictionary(Of String, Decimal)) Implements IFinanceRepository.GetFinancialSummaryAsync
+        Public Async Function GetFinancialSummaryAsync() As Task(Of IDictionary(Of String, Decimal)) Implements IFinanceRepository.GetFinancialSummaryAsync
             Using conn = ConnectionManager.CreateConnection()
                 Const sql As String = "
                     SELECT 
@@ -94,7 +95,7 @@ Namespace Repositories
                     dict.Add("TotalRemaining", 0D)
                 End If
                 
-                Return dict
+                Return CType(dict, IDictionary(Of String, Decimal))
             End Using
         End Function
     End Class
