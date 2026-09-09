@@ -47,8 +47,8 @@ Namespace Forms
             Me.pnlStatusBar = New System.Windows.Forms.Panel()
             Me.lblStatusTime = New System.Windows.Forms.Label()
             Me.lblStatusInfo = New System.Windows.Forms.Label()
-            Me.tabMain = New System.Windows.Forms.TabControl()
-            Me.tabDashboard = New System.Windows.Forms.TabPage()
+            Me.tabMain = New Krypton.Navigator.KryptonNavigator()
+            Me.tabDashboard = New Krypton.Navigator.KryptonPage()
             Me.pnlDashboardContent = New System.Windows.Forms.Panel()
             Me.lblDashboardWelcome = New System.Windows.Forms.Label()
             Me.pnlSidebar.SuspendLayout()
@@ -376,12 +376,11 @@ Namespace Forms
             '
             'tabMain
             '
-            Me.tabMain.Controls.Add(Me.tabDashboard)
+            Me.tabMain.Pages.Add(Me.tabDashboard)
             Me.tabMain.Dock = System.Windows.Forms.DockStyle.Fill
             Me.tabMain.Font = New System.Drawing.Font("Segoe UI", 9.5!)
             Me.tabMain.Location = New System.Drawing.Point(0, 60)
             Me.tabMain.Name = "tabMain"
-            Me.tabMain.RightToLeftLayout = True
             Me.tabMain.SelectedIndex = 0
             Me.tabMain.Size = New System.Drawing.Size(984, 671)
             Me.tabMain.TabIndex = 3
@@ -471,8 +470,8 @@ Namespace Forms
         Friend WithEvents pnlStatusBar As System.Windows.Forms.Panel
         Friend WithEvents lblStatusInfo As System.Windows.Forms.Label
         Friend WithEvents lblStatusTime As System.Windows.Forms.Label
-        Friend WithEvents tabMain As System.Windows.Forms.TabControl
-        Friend WithEvents tabDashboard As System.Windows.Forms.TabPage
+        Friend WithEvents tabMain As Krypton.Navigator.KryptonNavigator
+        Friend WithEvents tabDashboard As Krypton.Navigator.KryptonPage
         Friend WithEvents pnlDashboardContent As System.Windows.Forms.Panel
         Friend WithEvents lblDashboardWelcome As System.Windows.Forms.Label
     End Class

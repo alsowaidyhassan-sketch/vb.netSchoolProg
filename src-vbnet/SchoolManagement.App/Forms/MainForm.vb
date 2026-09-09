@@ -9,7 +9,7 @@ Namespace Forms
     ''' متوافق بالكامل مع Visual Studio Designer مع فصل الكود عن التصميم
     ''' </summary>
     Partial Public Class MainForm
-        Inherits Form
+        Inherits Krypton.Toolkit.KryptonForm
 
         Private _tabManager As TabManager
 
@@ -36,7 +36,7 @@ Namespace Forms
         End Sub
 
         Private Sub WireNavigationEvents()
-            AddHandler btnNavDashboard.Click, Sub(s, e) tabMain.SelectedTab = tabDashboard
+            AddHandler btnNavDashboard.Click, Sub(s, e) tabMain.SelectedPage = tabDashboard
             AddHandler btnNavStudents.Click, AddressOf BtnNavStudents_Click
             AddHandler btnNavTeachers.Click, AddressOf BtnNavTeachers_Click
             AddHandler btnNavAttendance.Click, AddressOf BtnNavAttendance_Click
