@@ -1,200 +1,146 @@
 Imports System
 Imports System.Drawing
 Imports System.Windows.Forms
+Imports SchoolManagement.App.Helpers
 
 Namespace Forms
-    Public Class MainForm
+    ''' <summary>
+    ''' النموذج الرئيسي لنظام إدارة المدارس العراقي
+    ''' متوافق بالكامل مع Visual Studio Designer مع فصل الكود عن التصميم
+    ''' </summary>
+    Partial Public Class MainForm
         Inherits Form
 
-        ' Components
-        Private WithEvents pnlSidebar As Panel
-        Private WithEvents pnlTopBar As Panel
-        Private WithEvents pnlStatusBar As Panel
-        Private WithEvents tabMain As TabControl
-        Private lblAppTitle As Label
-        Private lblDbStatus As Label
-        Private btnToggleSidebar As Button
-        Private isSidebarCollapsed As Boolean = False
+        Private _tabManager As TabManager
 
         Public Sub New()
             InitializeComponent()
-            ConfigureModernStyles()
-            OpenTab("لوحة التحكم", "Dashboard")
+
+            ' التحقق من وضع التصميم لمنع أي أخطاء وقت التصميم
+            If DesignModeHelper.IsInDesignMode(Me) Then
+                Return
+            End If
+
+            _tabManager = New TabManager(tabMain)
+            WireNavigationEvents()
         End Sub
 
-        Private Sub InitializeComponent()
-            Me.Text = "نظام إدارتي لإدارة المدارس - Edura School Management"
-            Me.Size = New Size(1366, 768)
-            Me.MinimumSize = New Size(1024, 600)
-            Me.StartPosition = FormStartPosition.CenterScreen
-            Me.RightToLeft = RightToLeft.Yes
-            Me.RightToLeftLayout = True
-            Me.Font = New Font("Segoe UI", 10, FontStyle.Regular)
+        Protected Overrides Sub OnLoad(e As EventArgs)
+            MyBase.OnLoad(e)
+            If DesignModeHelper.IsInDesignMode(Me) Then
+                Return
+            End If
 
-            ' TopBar
-            pnlTopBar = New Panel With {
-                .Dock = DockStyle.Top,
-                .Height = 56,
-                .BackColor = Color.FromArgb(15, 23, 42) ' Dark Slate 900
-            }
-
-            lblAppTitle = New Label With {
-                .Text = "🏫 نظام إدارتي لإدارة المدارس | الإصدار المتقدم Enterprise",
-                .ForeColor = Color.White,
-                .Font = New Font("Segoe UI", 11, FontStyle.Bold),
-                .AutoSize = True,
-                .Location = New Point(20, 16)
-            }
-            pnlTopBar.Controls.Add(lblAppTitle)
-
-            ' Sidebar
-            pnlSidebar = New Panel With {
-                .Dock = DockStyle.Right,
-                .Width = 240,
-                .BackColor = Color.FromArgb(30, 41, 59) ' Slate 800
-            }
-            PopulateSidebarButtons()
-
-            ' StatusBar
-            pnlStatusBar = New Panel With {
-                .Dock = DockStyle.Bottom,
-                .Height = 28,
-                .BackColor = Color.FromArgb(15, 23, 42)
-            }
-            lblDbStatus = New Label With {
-                .Text = "🟢 قاعدة البيانات متصلة: SQL Server (EduraSchoolDB) | المستخدم: المشرف العام (admin)",
-                .ForeColor = Color.FromArgb(148, 163, 184),
-                .Font = New Font("Segoe UI", 9, FontStyle.Regular),
-                .AutoSize = True,
-                .Location = New Point(10, 5)
-            }
-            pnlStatusBar.Controls.Add(lblDbStatus)
-
-            ' TabControl
-            tabMain = New TabControl With {
-                .Dock = DockStyle.Fill,
-                .Font = New Font("Segoe UI", 10, FontStyle.Bold),
-                .DrawMode = TabDrawMode.OwnerDrawFixed,
-                .ItemSize = New Size(140, 36),
-                .SizeMode = TabSizeMode.Fixed
-            }
-            AddHandler tabMain.DrawItem, AddressOf OnTabDrawItem
-            AddHandler tabMain.MouseDown, AddressOf OnTabMouseDown
-
-            Me.Controls.Add(tabMain)
-            Me.Controls.Add(pnlSidebar)
-            Me.Controls.Add(pnlTopBar)
-            Me.Controls.Add(pnlStatusBar)
+            ' افتراضياً نقوم بفتح تبويب شؤون الطلاب
+            OpenStudentsTab()
         End Sub
 
-        Private Sub PopulateSidebarButtons()
-            Dim modules As (Title As String, Key As String)() = {
-                ("📊 لوحة التحكم", "Dashboard"),
-                ("🎓 شؤون الطلاب", "Students"),
-                ("👨‍🏫 الكادر والمعلمين", "Teachers"),
-                ("🏫 الفصول والقاعات", "Classes"),
-                ("📚 المواد الدراسية", "Subjects"),
-                ("⏱️ الحضور والغياب", "Attendance"),
-                ("📝 الامتحانات والدرجات", "Exams"),
-                ("💰 الرسوم والمالية", "Finance"),
-                ("👥 الموارد البشرية HR", "HR"),
-                ("📈 مركز التقارير", "Reports"),
-                ("🔐 الصلاحيات والمستخدمين", "Users"),
-                ("💾 النسخ الاحتياطي", "Backup"),
-                ("📜 سجل العمليات Audit", "Audit"),
-                ("⚙️ إعدادات النظام", "Settings")
-            }
-
-            Dim topOffset As Integer = 10
-            For Each item In modules
-                Dim btn = New Button With {
-                    .Text = "   " & item.Title,
-                    .Tag = item.Key,
-                    .Dock = DockStyle.Top,
-                    .Height = 44,
-                    .FlatStyle = FlatStyle.Flat,
-                    .ForeColor = Color.FromArgb(226, 232, 240),
-                    .BackColor = Color.FromArgb(30, 41, 59),
-                    .TextAlign = ContentAlignment.MiddleRight,
-                    .Font = New Font("Segoe UI", 10, FontStyle.Regular),
-                    .Cursor = Cursors.Hand
-                }
-                btn.FlatAppearance.BorderSize = 0
-                btn.FlatAppearance.MouseOverBackColor = Color.FromArgb(51, 65, 85)
-                AddHandler btn.Click, Sub(s, e) OpenTab(item.Title.Substring(3).Trim(), item.Key)
-                pnlSidebar.Controls.Add(btn)
-                btn.BringToFront()
-            Next
+        Private Sub WireNavigationEvents()
+            AddHandler btnNavDashboard.Click, Sub(s, e) tabMain.SelectedTab = tabDashboard
+            AddHandler btnNavStudents.Click, AddressOf BtnNavStudents_Click
+            AddHandler btnNavTeachers.Click, AddressOf BtnNavTeachers_Click
+            AddHandler btnNavAttendance.Click, AddressOf BtnNavAttendance_Click
+            AddHandler btnNavClasses.Click, AddressOf BtnNavClasses_Click
+            AddHandler btnNavSubjects.Click, AddressOf BtnNavSubjects_Click
+            AddHandler btnNavExams.Click, AddressOf BtnNavExams_Click
+            AddHandler btnNavGrades.Click, AddressOf BtnNavGrades_Click
+            AddHandler btnNavFinance.Click, AddressOf BtnNavFinance_Click
+            AddHandler btnNavReports.Click, AddressOf BtnNavReports_Click
+            AddHandler btnNavSettings.Click, AddressOf BtnNavSettings_Click
         End Sub
 
-        Public Sub OpenTab(title As String, key As String)
-            ' Check if tab already exists
-            For Each tab As TabPage In tabMain.TabPages
-                If tab.Name = key Then
-                    tabMain.SelectedTab = tab
-                    Return
-                End If
-            Next
-
-            ' Create new TabPage
-            Dim newTab = New TabPage With {
-                .Name = key,
-                .Text = title & "   ✕",
-                .BackColor = Color.FromArgb(248, 250, 252)
-            }
-
-            ' Container for UserControl
-            Select Case key
-                Case "Students"
-                    Dim studentsCtrl As New StudentsControl With {.Dock = DockStyle.Fill}
-                    newTab.Controls.Add(studentsCtrl)
-                Case "Teachers"
-                    Dim teachersCtrl As New TeachersControl With {.Dock = DockStyle.Fill}
-                    newTab.Controls.Add(teachersCtrl)
-                Case Else
-                    Dim lbl = New Label With {
-                        .Text = $"وحدة: {title} جاهزة ومتصلة بقاعدة البيانات",
-                        .Dock = DockStyle.Top,
-                        .Height = 50,
-                        .Font = New Font("Segoe UI", 14, FontStyle.Bold),
-                        .ForeColor = Color.FromArgb(15, 23, 42),
-                        .TextAlign = ContentAlignment.MiddleCenter
-                    }
-                    newTab.Controls.Add(lbl)
-            End Select
-
-            tabMain.TabPages.Add(newTab)
-            tabMain.SelectedTab = newTab
+        Private Sub BtnNavStudents_Click(sender As Object, e As EventArgs)
+            OpenStudentsTab()
         End Sub
 
-        Private Sub OnTabDrawItem(sender As Object, e As DrawItemEventArgs)
-            Dim g = e.Graphics
-            Dim tab = tabMain.TabPages(e.Index)
-            Dim isSelected = (e.State And DrawItemState.Selected) = DrawItemState.Selected
-
-            Dim bgBrush = If(isSelected, New SolidBrush(Color.FromArgb(255, 255, 255)), New SolidBrush(Color.FromArgb(226, 232, 240)))
-            Dim textBrush = If(isSelected, New SolidBrush(Color.FromArgb(37, 99, 235)), New SolidBrush(Color.FromArgb(71, 85, 105)))
-
-            g.FillRectangle(bgBrush, e.Bounds)
-            g.DrawString(tab.Text, Me.Font, textBrush, e.Bounds.X + 10, e.Bounds.Y + 8)
+        Private Sub OpenStudentsTab()
+            Dim frm As New StudentsForm()
+            frm.TopLevel = False
+            frm.FormBorderStyle = FormBorderStyle.None
+            frm.Dock = DockStyle.Fill
+            frm.Visible = True
+            _tabManager.OpenTab("🎓 شؤون الطلاب", "Students", frm)
         End Sub
 
-        Private Sub OnTabMouseDown(sender As Object, e As MouseEventArgs)
-            For i As Integer = 0 To tabMain.TabCount - 1
-                Dim r = tabMain.GetTabRect(i)
-                Dim closeRect = New Rectangle(r.Right - 25, r.Top + 6, 20, 20)
-                If closeRect.Contains(e.Location) Then
-                    If tabMain.TabPages(i).Name <> "Dashboard" Then
-                        tabMain.TabPages.RemoveAt(i)
-                    End If
-                    Return
-                End If
-            Next
+        Private Sub BtnNavTeachers_Click(sender As Object, e As EventArgs)
+            Dim frm As New TeachersForm()
+            frm.TopLevel = False
+            frm.FormBorderStyle = FormBorderStyle.None
+            frm.Dock = DockStyle.Fill
+            frm.Visible = True
+            _tabManager.OpenTab("👨‍🏫 المعلمون", "Teachers", frm)
         End Sub
 
-        Private Sub ConfigureModernStyles()
-            ' Windows 11 rounded style helper
-            Me.DoubleBuffered = True
+        Private Sub BtnNavAttendance_Click(sender As Object, e As EventArgs)
+            Dim frm As New AttendanceForm()
+            frm.TopLevel = False
+            frm.FormBorderStyle = FormBorderStyle.None
+            frm.Dock = DockStyle.Fill
+            frm.Visible = True
+            _tabManager.OpenTab("📅 الحضور والغياب", "Attendance", frm)
+        End Sub
+
+        Private Sub BtnNavClasses_Click(sender As Object, e As EventArgs)
+            Dim frm As New ClassesForm()
+            frm.TopLevel = False
+            frm.FormBorderStyle = FormBorderStyle.None
+            frm.Dock = DockStyle.Fill
+            frm.Visible = True
+            _tabManager.OpenTab("🏫 الصفوف والشعب", "Classes", frm)
+        End Sub
+
+        Private Sub BtnNavSubjects_Click(sender As Object, e As EventArgs)
+            Dim frm As New SubjectsForm()
+            frm.TopLevel = False
+            frm.FormBorderStyle = FormBorderStyle.None
+            frm.Dock = DockStyle.Fill
+            frm.Visible = True
+            _tabManager.OpenTab("📚 المواد الدراسية", "Subjects", frm)
+        End Sub
+
+        Private Sub BtnNavExams_Click(sender As Object, e As EventArgs)
+            Dim frm As New ExamsForm()
+            frm.TopLevel = False
+            frm.FormBorderStyle = FormBorderStyle.None
+            frm.Dock = DockStyle.Fill
+            frm.Visible = True
+            _tabManager.OpenTab("📝 الامتحانات", "Exams", frm)
+        End Sub
+
+        Private Sub BtnNavGrades_Click(sender As Object, e As EventArgs)
+            Dim frm As New GradesForm()
+            frm.TopLevel = False
+            frm.FormBorderStyle = FormBorderStyle.None
+            frm.Dock = DockStyle.Fill
+            frm.Visible = True
+            _tabManager.OpenTab("📈 الدرجات والشهادات", "Grades", frm)
+        End Sub
+
+        Private Sub BtnNavFinance_Click(sender As Object, e As EventArgs)
+            Dim frm As New FinanceForm()
+            frm.TopLevel = False
+            frm.FormBorderStyle = FormBorderStyle.None
+            frm.Dock = DockStyle.Fill
+            frm.Visible = True
+            _tabManager.OpenTab("💰 المالية والأقساط", "Finance", frm)
+        End Sub
+
+        Private Sub BtnNavReports_Click(sender As Object, e As EventArgs)
+            Dim frm As New ReportsForm()
+            frm.TopLevel = False
+            frm.FormBorderStyle = FormBorderStyle.None
+            frm.Dock = DockStyle.Fill
+            frm.Visible = True
+            _tabManager.OpenTab("📑 التقارير الرسمية", "Reports", frm)
+        End Sub
+
+        Private Sub BtnNavSettings_Click(sender As Object, e As EventArgs)
+            Dim frm As New SettingsForm()
+            frm.TopLevel = False
+            frm.FormBorderStyle = FormBorderStyle.None
+            frm.Dock = DockStyle.Fill
+            frm.Visible = True
+            _tabManager.OpenTab("⚙️ إعدادات النظام", "Settings", frm)
         End Sub
     End Class
 End Namespace

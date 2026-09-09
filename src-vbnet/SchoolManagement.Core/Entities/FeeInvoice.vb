@@ -32,7 +32,17 @@ Namespace Entities
         Public Property InvoiceNumber As String
         Public Property StudentName As String
         Public Property Amount As Decimal
-        Public Property Date As DateTime
+        Public Property ReceiptDate As DateTime = DateTime.Today
+
+        Public Property PaymentDate As DateTime
+            Get
+                Return ReceiptDate
+            End Get
+            Set(value As DateTime)
+                ReceiptDate = value
+            End Set
+        End Property
+
         Public Property PaymentMethod As String  ' مدى, تحويل بنكي, بطاقة ائتمان, نقداً
         Public Property ReferenceNumber As String
         Public Property CashierName As String

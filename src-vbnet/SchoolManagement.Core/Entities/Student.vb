@@ -98,29 +98,4 @@ Namespace Entities
         Public Property UpdatedBy As String = String.Empty
         Public Property IsActive As Boolean = True
     End Class
-
-    Public Class Teacher
-        Public Property TeacherId As Integer
-        Public Property StaffId As Integer
-        Public Property FullName As String = String.Empty
-        Public Property Specialization As String = String.Empty
-        Public Property AcademicDegree As String = String.Empty
-        Public Property Phone As String = String.Empty
-        Public Property Email As String = String.Empty
-        Public Property YearsOfExperience As Integer
-        Public Property BasicSalary As Decimal ' بالدينار العراقي (IQD)
-        Public Property IsActive As Boolean = True
-    End Class
-
-    Public Class AttendanceRecord
-        Public Property AttendanceId As Long
-        Public Property StudentId As Integer
-        Public Property StudentName As String = String.Empty
-        Public Property SectionId As Integer
-        Public Property AttendanceDate As DateTime
-        Public Property Status As String = "Present" ' Present / Absent / Late / Excused
-        Public Property LateMinutes As Integer
-        Public Property ExcuseReason As String = String.Empty
-        Public Property RecordedBy As String = String.Empty
-    End Class
 End Namespace

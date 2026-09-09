@@ -35,10 +35,10 @@ Namespace Repositories
                 Const sql As String = "
                     INSERT INTO [dbo].[PaymentReceipts] (
                         [ReceiptNumber], [InvoiceNumber], [StudentName],
-                        [Amount], [Date], [PaymentMethod], [ReferenceNumber], [CashierName], [CreatedAt]
+                        [Amount], [ReceiptDate], [PaymentMethod], [ReferenceNumber], [CashierName], [CreatedAt]
                     ) VALUES (
                         @ReceiptNumber, @InvoiceNumber, @StudentName,
-                        @Amount, @Date, @PaymentMethod, @ReferenceNumber, @CashierName, GETDATE()
+                        @Amount, @ReceiptDate, @PaymentMethod, @ReferenceNumber, @CashierName, GETDATE()
                     );
                     SELECT CAST(SCOPE_IDENTITY() AS INT);"
                 Return Await conn.ExecuteScalarAsync(Of Integer)(sql, receipt)
