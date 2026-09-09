@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>SchoolManagement.Core</RootNamespace>
+    <TargetFramework>net8.0</TargetFramework>
+    <OptionExplicit>On</OptionExplicit>
+    <OptionCompare>Binary</OptionCompare>
+    <OptionStrict>On</OptionStrict>
+    <OptionInfer>On</OptionInfer>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+</Project>

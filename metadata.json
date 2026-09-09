@@ -1,0 +1,6 @@
+{
+  "name": "نظام إدارتي لإدارة المدارس | Edura School Management",
+  "description": "برنامج احترافي ومتكامل لإدارة المدارس بتقنية VB.NET وقاعدة بيانات Microsoft SQL Server مع واجهة عصرية باللغة العربية ونظام تبويبات وإدارة شاملة للطلاب والمعلمين والدرجات والرسوم والتقارير.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

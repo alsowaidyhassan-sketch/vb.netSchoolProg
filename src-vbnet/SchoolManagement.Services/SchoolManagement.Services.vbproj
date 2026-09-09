@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>SchoolManagement.Services</RootNamespace>
+    <TargetFramework>net8.0</TargetFramework>
+    <OptionExplicit>On</OptionExplicit>
+    <OptionCompare>Binary</OptionCompare>
+    <OptionStrict>On</OptionStrict>
+    <OptionInfer>On</OptionInfer>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SchoolManagement.Core\SchoolManagement.Core.vbproj" />
+    <ProjectReference Include="..\SchoolManagement.Data\SchoolManagement.Data.vbproj" />
+  </ItemGroup>
+</Project>
