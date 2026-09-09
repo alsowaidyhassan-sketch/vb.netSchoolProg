@@ -12,6 +12,9 @@ import {
   initialAuditLogs,
   initialBackups,
   initialUsers,
+  initialLicenseInfo,
+  initialDbConfig,
+  initialVersionInfo,
   defaultSettings
 } from './mockDatabase';
 import { SchoolSettings, BackupRecord } from '../types';
@@ -27,7 +30,10 @@ export {
   initialInvoices,
   initialStaff,
   initialAuditLogs,
-  initialUsers
+  initialUsers,
+  initialLicenseInfo,
+  initialDbConfig,
+  initialVersionInfo
 };
 
 export const initialReceipts = initialPayments;
@@ -43,8 +49,8 @@ export { initialBackupsFormatted as initialBackups };
 
 export const initialSettings: SchoolSettings = {
   ...defaultSettings,
-  schoolNameEn: 'Al-Ruwwad Model Private Schools',
-  currentSemester: defaultSettings.activeSemester || 'الفصل الدراسي الثاني',
-  website: 'https://alruwad.edu.sa',
-  connectionString: 'Server=localhost;Database=SchoolManagementDB;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=True;'
+  schoolNameEn: 'Dijlah Model Secondary School for Boys',
+  currentSemester: defaultSettings.activeSemester || 'الفصل الدراسي الأول',
+  website: 'https://dijlah.edu.iq',
+  connectionString: 'Server=localhost;Database=EduraSchoolDB;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=True;'
 };

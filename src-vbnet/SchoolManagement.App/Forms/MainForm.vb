@@ -144,15 +144,24 @@ Namespace Forms
             }
 
             ' Container for UserControl
-            Dim lbl = New Label With {
-                .Text = $"وحدة: {title} جاهزة ومتصلة بقاعدة البيانات",
-                .Dock = DockStyle.Top,
-                .Height = 50,
-                .Font = New Font("Segoe UI", 14, FontStyle.Bold),
-                .ForeColor = Color.FromArgb(15, 23, 42),
-                .TextAlign = ContentAlignment.MiddleCenter
-            }
-            newTab.Controls.Add(lbl)
+            Select Case key
+                Case "Students"
+                    Dim studentsCtrl As New StudentsControl With {.Dock = DockStyle.Fill}
+                    newTab.Controls.Add(studentsCtrl)
+                Case "Teachers"
+                    Dim teachersCtrl As New TeachersControl With {.Dock = DockStyle.Fill}
+                    newTab.Controls.Add(teachersCtrl)
+                Case Else
+                    Dim lbl = New Label With {
+                        .Text = $"وحدة: {title} جاهزة ومتصلة بقاعدة البيانات",
+                        .Dock = DockStyle.Top,
+                        .Height = 50,
+                        .Font = New Font("Segoe UI", 14, FontStyle.Bold),
+                        .ForeColor = Color.FromArgb(15, 23, 42),
+                        .TextAlign = ContentAlignment.MiddleCenter
+                    }
+                    newTab.Controls.Add(lbl)
+            End Select
 
             tabMain.TabPages.Add(newTab)
             tabMain.SelectedTab = newTab

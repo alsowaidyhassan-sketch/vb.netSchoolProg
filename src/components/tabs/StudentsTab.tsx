@@ -9,7 +9,8 @@ import {
   Phone,
   School,
   CheckCircle2,
-  AlertTriangle
+  AlertTriangle,
+  MessageSquare
 } from 'lucide-react';
 import { Student, StudentGrade, AttendanceRecord, FeeInvoice } from '../../types';
 import { ModernDataGrid, Column } from '../common/ModernDataGrid';
@@ -25,6 +26,7 @@ interface StudentsTabProps {
   onAddStudent: (student: Omit<Student, 'id'>) => void;
   onDeleteStudent: (id: number) => void;
   classesList: string[];
+  onOpenWhatsApp?: (student: Student) => void;
 }
 
 export const StudentsTab: React.FC<StudentsTabProps> = ({
@@ -34,7 +36,8 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
   invoices,
   onAddStudent,
   onDeleteStudent,
-  classesList
+  classesList,
+  onOpenWhatsApp
 }) => {
   const [selectedClass, setSelectedClass] = useState<string>('ALL');
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
@@ -65,16 +68,22 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
     },
     {
       key: 'fullName',
-      header: 'اسم الطالب الرباعي',
+      header: 'اسم الطالب الخماسي واللقب',
       sortable: true,
       render: (s) => (
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-blue-600/30 border border-blue-500/40 text-blue-300 font-bold flex items-center justify-center text-xs">
+          <div className="w-8 h-8 rounded-xl bg-blue-600/30 border border-blue-500/40 text-blue-300 font-bold flex items-center justify-center text-xs shrink-0">
             {s.firstName[0]}
           </div>
           <div>
             <div className="font-bold text-slate-100">{s.fullName}</div>
-            <div className="text-[11px] text-slate-400 font-mono">هوية: {s.nationalId}</div>
+            <div className="text-[11px] text-slate-400 flex items-center gap-1.5 font-mono">
+              <span className="text-amber-400">{s.identityDocumentType || 'الوطنية'}:</span>
+              <span>{s.nationalId}</span>
+              {s.motherName && (
+                <span className="text-slate-500 text-[10px]">• الأم: {s.motherName}</span>
+              )}
+            </div>
           </div>
         </div>
       )
@@ -95,9 +104,16 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
       header: 'هاتف ولي الأمر',
       sortable: true,
       render: (s) => (
-        <div className="flex items-center gap-1 font-mono text-xs text-slate-300">
-          <Phone className="w-3 h-3 text-slate-500" />
-          <span>{s.primaryParentPhone}</span>
+        <div className="space-y-0.5">
+          <div className="flex items-center gap-1 font-mono text-xs text-slate-300">
+            <Phone className="w-3 h-3 text-slate-500" />
+            <span>{s.primaryParentPhone}</span>
+          </div>
+          {s.iraqiAddress?.province && (
+            <div className="text-[10px] text-emerald-400">
+              {s.iraqiAddress.province} - {s.iraqiAddress.district || ''}
+            </div>
+          )}
         </div>
       )
     },
@@ -134,23 +150,32 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
       width: '120px',
       render: (s) => (
         <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+          {onOpenWhatsApp && (
+            <button
+              onClick={() => onOpenWhatsApp(s)}
+              className="p-1.5 rounded-lg hover:bg-emerald-950/80 text-emerald-400 hover:text-emerald-300 transition-colors cursor-pointer"
+              title="إرسال رسالة واتساب لولي الأمر"
+            >
+              <MessageSquare className="w-4 h-4" />
+            </button>
+          )}
           <button
             onClick={() => setProfileStudent(s)}
-            className="p-1.5 rounded-lg hover:bg-slate-800 text-blue-400 hover:text-blue-300 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-slate-800 text-blue-400 hover:text-blue-300 transition-colors cursor-pointer"
             title="عرض الملف الكامل للطالب"
           >
             <Eye className="w-4 h-4" />
           </button>
           <button
             onClick={() => alert(`تعديل بيانات الطالب: ${s.fullName}`)}
-            className="p-1.5 rounded-lg hover:bg-slate-800 text-amber-400 hover:text-amber-300 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-slate-800 text-amber-400 hover:text-amber-300 transition-colors cursor-pointer"
             title="تعديل البيانات"
           >
             <Edit className="w-4 h-4" />
           </button>
           <button
             onClick={() => setStudentToDelete(s)}
-            className="p-1.5 rounded-lg hover:bg-red-950/60 text-red-400 hover:text-red-300 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-red-950/60 text-red-400 hover:text-red-300 transition-colors cursor-pointer"
             title="حذف الطالب (Soft Delete)"
           >
             <Trash2 className="w-4 h-4" />

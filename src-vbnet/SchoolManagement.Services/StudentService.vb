@@ -13,24 +13,38 @@ Namespace Services
         End Sub
 
         Public Async Function RegisterStudentAsync(student As Student) As Task(Of Integer)
-            ' Validation rules
-            If String.IsNullOrWhiteSpace(student.FirstName) OrElse String.IsNullOrWhiteSpace(student.LastName) Then
-                Throw New ArgumentException("اسم الطالب الأول واسم العائلة مطلوبان.")
+            ' قواعد التحقق وفق النظام العراقي المعتمد
+            If String.IsNullOrWhiteSpace(student.FirstName) OrElse String.IsNullOrWhiteSpace(student.FatherName) OrElse String.IsNullOrWhiteSpace(student.GrandFatherName) Then
+                Throw New ArgumentException("الاسم الثلاثي للطالب (الاسم، الأب، الجد) إلزامي في جمهورية العراق.")
             End If
 
-            If String.IsNullOrWhiteSpace(student.NationalId) OrElse student.NationalId.Length < 10 Then
-                Throw New ArgumentException("رقم الهوية الوطنية غير صحيح أو أقل من 10 أرقام.")
+            ' التحقق من وثيقة الهوية الرسمية (البطاقة الوطنية 12 رقماً / هوية الأحوال / جواز السفر)
+            Dim idValidation = IraqiValidationService.ValidateIdentityDocument(student.NationalId, student.IdentityDocumentType)
+            If Not idValidation.IsValid Then
+                Throw New ArgumentException(idValidation.ErrorMessage)
             End If
 
-            ' Check duplication
+            ' التحقق من هاتف الطالب أو ولي الأمر إذا تم إدخاله
+            If Not String.IsNullOrWhiteSpace(student.Phone) Then
+                Dim phoneValidation = IraqiValidationService.ValidatePhone(student.Phone)
+                If Not phoneValidation.IsValid Then
+                    Throw New ArgumentException(phoneValidation.ErrorMessage)
+                End If
+                student.Phone = phoneValidation.CleanPhone
+            End If
+
+            ' فحص عدم التكرار
             Dim existing = Await _studentRepo.GetByNationalIdAsync(student.NationalId)
             If existing IsNot Nothing Then
                 Throw New InvalidOperationException($"الطالب مسجل مسبقاً بنفس رقم الهوية ({student.NationalId}).")
             End If
 
-            ' Auto generate student number if not provided
+            ' إنشاء الرقم الأكاديمي والباركود تلقائياً
             If String.IsNullOrWhiteSpace(student.StudentNumber) Then
                 student.StudentNumber = $"STD-{DateTime.Now.Year}-{New Random().Next(1000, 9999)}"
+            End If
+            If String.IsNullOrWhiteSpace(student.Barcode) Then
+                student.Barcode = $"62810010{New Random().Next(1000, 9999)}"
             End If
 
             Return Await _studentRepo.AddAsync(student)

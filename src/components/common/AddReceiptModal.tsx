@@ -21,10 +21,10 @@ export const AddReceiptModal: React.FC<AddReceiptModalProps> = ({
   );
   const selectedInvoice = invoices.find((i) => i.id === selectedInvoiceId);
 
-  const [amount, setAmount] = useState<number>(selectedInvoice?.remainingAmount || 5000);
-  const [paymentMethod, setPaymentMethod] = useState<'مدى' | 'تحويل بنكي' | 'بطاقة ائتمان' | 'نقداً'>('مدى');
-  const [referenceNumber, setReferenceNumber] = useState(`TXN-${Math.floor(1000000 + Math.random() * 9000000)}`);
-  const [cashierName, setCashierName] = useState('فهد خالد الدوسري');
+  const [amount, setAmount] = useState<number>(selectedInvoice?.remainingAmount || 500000);
+  const [paymentMethod, setPaymentMethod] = useState<'زين كاش (Zain Cash)' | 'كي كارد (Qi Card)' | 'تحويل مصرفي' | 'نقداً بالدينار'>('نقداً بالدينار');
+  const [referenceNumber, setReferenceNumber] = useState(`IQD-${Math.floor(1000000 + Math.random() * 9000000)}`);
+  const [cashierName, setCashierName] = useState('مصطفى حيدر المحمداوي');
 
   if (!isOpen) return null;
 
@@ -80,7 +80,7 @@ export const AddReceiptModal: React.FC<AddReceiptModalProps> = ({
             >
               {invoices.map((inv) => (
                 <option key={inv.id} value={inv.id}>
-                  {inv.studentName} — {inv.invoiceNumber} (المتبقي: {inv.remainingAmount.toLocaleString()} ر.س)
+                  {inv.studentName} — {inv.invoiceNumber} (المتبقي: {inv.remainingAmount.toLocaleString()} د.ع)
                 </option>
               ))}
             </select>
@@ -90,27 +90,28 @@ export const AddReceiptModal: React.FC<AddReceiptModalProps> = ({
             <div className="p-3 bg-slate-950/70 rounded-xl border border-slate-800 grid grid-cols-3 gap-2 text-[11px]">
               <div>
                 <span className="text-slate-500">المبلغ الأصلي:</span>
-                <div className="font-bold text-slate-200">{selectedInvoice.finalAmount.toLocaleString()} ر.س</div>
+                <div className="font-bold text-slate-200">{selectedInvoice.finalAmount.toLocaleString()} د.ع</div>
               </div>
               <div>
                 <span className="text-slate-500">المدفوع سابقاً:</span>
-                <div className="font-bold text-emerald-400">{selectedInvoice.paidAmount.toLocaleString()} ر.س</div>
+                <div className="font-bold text-emerald-400">{selectedInvoice.paidAmount.toLocaleString()} د.ع</div>
               </div>
               <div>
                 <span className="text-slate-500">المتبقي حالياً:</span>
-                <div className="font-bold text-rose-400 font-mono">{selectedInvoice.remainingAmount.toLocaleString()} ر.س</div>
+                <div className="font-bold text-rose-400 font-mono">{selectedInvoice.remainingAmount.toLocaleString()} د.ع</div>
               </div>
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-slate-300 font-semibold mb-1">مبلغ السند المطلوب تحصيله (ر.س) *</label>
+              <label className="block text-slate-300 font-semibold mb-1">مبلغ السند المطلوب تحصيله (د.ع) *</label>
               <input
                 type="number"
                 required
-                min={100}
-                max={selectedInvoice ? selectedInvoice.remainingAmount : 100000}
+                min={1000}
+                step={5000}
+                max={selectedInvoice ? selectedInvoice.remainingAmount : 50000000}
                 value={amount}
                 onChange={(e) => setAmount(Number(e.target.value))}
                 className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white font-mono font-bold"
@@ -123,10 +124,10 @@ export const AddReceiptModal: React.FC<AddReceiptModalProps> = ({
                 onChange={(e: any) => setPaymentMethod(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white font-semibold"
               >
-                <option value="مدى">مدى (Mada)</option>
-                <option value="تحويل بنكي">تحويل بنكي (Bank Transfer)</option>
-                <option value="بطاقة ائتمان">بطاقة ائتمان (Visa / MC)</option>
-                <option value="نقداً">نقداً (Cash)</option>
+                <option value="نقداً بالدينار">نقداً بالدينار العراقي (Cash IQD)</option>
+                <option value="زين كاش (Zain Cash)">زين كاش (Zain Cash)</option>
+                <option value="كي كارد (Qi Card)">كي كارد / الماستر كارد (Qi Card)</option>
+                <option value="تحويل مصرفي">تحويل مصرفي (Bank Transfer)</option>
               </select>
             </div>
           </div>

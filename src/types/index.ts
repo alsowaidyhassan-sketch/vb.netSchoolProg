@@ -22,15 +22,93 @@ export interface TabItem {
   isPinned?: boolean;
 }
 
+export type IraqiIdentityDocType =
+  | 'البطاقة الوطنية الموحدة'
+  | 'هوية الأحوال المدنية'
+  | 'شهادة الجنسية العراقية'
+  | 'جواز السفر العراقي'
+  | 'وثيقة رسمية أخرى';
+
+export type IraqiProvince =
+  | 'بغداد'
+  | 'البصرة'
+  | 'نينوى'
+  | 'أربيل'
+  | 'النجف الأشرف'
+  | 'كربلاء المقدسة'
+  | 'بابل'
+  | 'ذي قار'
+  | 'الأنبار'
+  | 'ديالى'
+  | 'كركوك'
+  | 'صلاح الدين'
+  | 'ميسان'
+  | 'المثنى'
+  | 'القادسية'
+  | 'واسط'
+  | 'دهوك'
+  | 'السليمانية';
+
+export interface IraqiAddress {
+  province: IraqiProvince | string;
+  district: string; // القضاء
+  subDistrict?: string; // الناحية
+  area: string; // الحي / المنطقة
+  street?: string; // الشارع
+  mahalla?: string; // المحلة
+  zuqaq?: string; // الزقاق
+  houseNumber?: string; // الدار / رقم الدار
+  nearestLandmark?: string; // أقرب نقطة دالة
+}
+
+export interface IdentityDocument {
+  id: number;
+  entityType: 'Student' | 'Teacher' | 'Staff' | 'Guardian';
+  entityId: number;
+  documentType: IraqiIdentityDocType;
+  documentNumber: string;
+  issueDate?: string;
+  expiryDate?: string;
+  issuingAuthority?: string;
+  issuingProvince?: IraqiProvince | string;
+  familyRecordNumber?: string; // رقم السجل
+  pageNumber?: string; // رقم الصحيفة
+  notes?: string;
+  isVerified?: boolean;
+}
+
+export interface CurrencyConfig {
+  code: 'IQD' | string;
+  symbol: 'د.ع' | string;
+  name: string;
+  decimals: number;
+  rateToUSD?: number;
+}
+
+export interface PhoneValidationResult {
+  isValid: boolean;
+  type: 'Mobile' | 'Landline' | 'Invalid';
+  carrier?: 'Zain IQ' | 'Asiacell' | 'Korek Telecom' | 'Landline' | 'Other';
+  internationalFormat: string;
+  localFormat: string;
+  errorMessage?: string;
+}
+
 export interface Student {
   id: number;
   studentNumber: string;
   barcode: string;
-  nationalId: string;
-  firstName: string;
-  secondName: string;
-  thirdName: string;
-  lastName: string;
+  nationalId: string; // رقم البطاقة الوطنية أو الوثيقة
+  identityDocumentType?: IraqiIdentityDocType;
+  firstName: string; // الاسم الأول
+  fatherName?: string; // اسم الأب
+  grandFatherName?: string; // اسم الجد
+  greatGrandFatherName?: string; // اسم الجد الأعلى
+  familyName?: string; // اللقب / اسم العائلة
+  motherName?: string; // اسم الأم
+  secondName: string; // للتوافق
+  thirdName: string; // للتوافق
+  lastName: string; // للتوافق
   fullName: string;
   gender: 'ذكر' | 'أنثى';
   dateOfBirth: string;
@@ -39,6 +117,7 @@ export interface Student {
   phone: string;
   email: string;
   address: string;
+  iraqiAddress?: IraqiAddress;
   primaryParentName: string;
   primaryParentPhone: string;
   emergencyContactName: string;
@@ -182,11 +261,88 @@ export interface UserAccount {
   username: string;
   fullName: string;
   email: string;
+  phone?: string;
   role: string;
   userType: 'Admin' | 'Teacher' | 'Accountant' | 'HR' | 'Reception';
+  password?: string;
   isActive: boolean;
+  isBlocked?: boolean;
+  blockReason?: string;
   lastLogin: string;
+  failedLoginAttempts?: number;
 }
+
+export interface LicenseInfo {
+  licenseKey: string;
+  organizationName: string;
+  edition: 'Enterprise' | 'Professional' | 'Standard' | 'Trial';
+  hardwareId: string;
+  issueDate: string;
+  expiryDate: string;
+  daysRemaining: number;
+  maxStudents: number;
+  maxUsers: number;
+  status: 'Active' | 'GracePeriod' | 'Expired';
+  signature: string;
+  licensedTo: string;
+}
+
+export interface ToastNotification {
+  id: string;
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  timestamp: string;
+  duration?: number;
+  autoCloseDelay?: number;
+  actionLabel?: string;
+  onAction?: () => void;
+}
+
+export interface DbConnectionConfig {
+  server: string;
+  port: number;
+  database: string;
+  authType: 'Windows' | 'SQLServer';
+  username?: string;
+  password?: string;
+  trustServerCertificate: boolean;
+  connectionTimeout: number;
+  encrypt: boolean;
+  status: 'Connected' | 'Disconnected' | 'Testing';
+  latencyMs?: number;
+  lastTested?: string;
+}
+
+export interface PendingMigration {
+  version: string;
+  title: string;
+  description: string;
+  sqlScript: string;
+  releaseDate: string;
+  appliedDate?: string;
+  isApplied: boolean;
+}
+
+export interface SystemVersionInfo {
+  currentVersion: string;
+  latestVersion: string;
+  releaseDate: string;
+  isUpdateAvailable: boolean;
+  autoCheckUpdates: boolean;
+  lastChecked: string;
+  changeLog: string[];
+  pendingMigrations: PendingMigration[];
+}
+
+export interface WhatsAppMessage {
+  recipientName: string;
+  phoneNumber: string;
+  studentName?: string;
+  messageType: 'attendance' | 'fees' | 'grades' | 'general' | 'behavior';
+  customText: string;
+}
+
 
 export interface AuditLogItem {
   id: number;

@@ -24,7 +24,14 @@ import {
   RefreshCw,
   Minus,
   Square,
-  X
+  X,
+  KeyRound,
+  MessageSquare,
+  ShieldAlert,
+  Download,
+  LogOut,
+  Sparkles,
+  Server
 } from 'lucide-react';
 
 import {
@@ -41,7 +48,12 @@ import {
   AuditLogRecord,
   BackupRecord,
   SystemUser,
-  SchoolSettings
+  SchoolSettings,
+  LicenseInfo,
+  DbConnectionConfig,
+  SystemVersionInfo,
+  ToastNotification,
+  UserAccount
 } from './types';
 
 import {
@@ -58,7 +70,10 @@ import {
   initialAuditLogs,
   initialBackups,
   initialUsers,
-  initialSettings
+  initialSettings,
+  initialLicenseInfo,
+  initialDbConfig,
+  initialVersionInfo
 } from './data/mockData';
 
 // Tabs Components
@@ -81,6 +96,14 @@ import { ArchitectureTab } from './components/tabs/ArchitectureTab';
 // Modals
 import { AddStudentModal } from './components/common/AddStudentModal';
 import { AddReceiptModal } from './components/common/AddReceiptModal';
+import { ToastContainer } from './components/common/ToastContainer';
+import { LoginScreen } from './components/auth/LoginScreen';
+import { ChangePasswordModal } from './components/auth/ChangePasswordModal';
+import { LicenseModal } from './components/system/LicenseModal';
+import { SystemUpdateModal } from './components/system/SystemUpdateModal';
+import { DbConnectionModal } from './components/system/DbConnectionModal';
+import { ExitBackupModal } from './components/system/ExitBackupModal';
+import { WhatsAppModal } from './components/common/WhatsAppModal';
 
 type TabKey =
   | 'dashboard'
@@ -102,6 +125,9 @@ type TabKey =
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabKey>('dashboard');
 
+  // Authentication State
+  const [currentUser, setCurrentUser] = useState<UserAccount | null>(() => initialUsers[0] || null);
+
   // Core Data States
   const [students, setStudents] = useState<Student[]>(initialStudents);
   const [teachers, setTeachers] = useState<Teacher[]>(initialTeachers);
@@ -118,9 +144,55 @@ export default function App() {
   const [systemUsers, setSystemUsers] = useState<SystemUser[]>(initialUsers);
   const [settings, setSettings] = useState<SchoolSettings>(initialSettings);
 
-  // Modals state
+  // System & Connection States
+  const [license, setLicense] = useState<LicenseInfo>(initialLicenseInfo);
+  const [dbConfig, setDbConfig] = useState<DbConnectionConfig>(initialDbConfig);
+  const [versionInfo, setVersionInfo] = useState<SystemVersionInfo>(initialVersionInfo);
+
+  // Smart Side Notifications (Toast system)
+  const [toasts, setToasts] = useState<ToastNotification[]>([
+    {
+      id: 'init-toast-1',
+      title: 'خادم SQL Server جاهز',
+      message: 'تم الاتصال بقاعدة بيانات المدرسة EduraSchoolDB بزمن استجابة 3.8ms.',
+      type: 'success',
+      timestamp: 'الآن',
+      autoCloseDelay: 6000
+    },
+    {
+      id: 'init-toast-2',
+      title: 'تحديث برمجي متوفر v2.6.0',
+      message: 'يتضمن ترقية أمان الحظر وإرسال رسائل الواتساب وترقية قواعد البيانات.',
+      type: 'info',
+      timestamp: 'الآن',
+      actionLabel: 'فحص وتثبيت',
+      onAction: () => setIsUpdateModalOpen(true),
+      autoCloseDelay: 10000
+    }
+  ]);
+
+  // Modal Dialogs
   const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
   const [isAddReceiptOpen, setIsAddReceiptOpen] = useState(false);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const [isLicenseModalOpen, setIsLicenseModalOpen] = useState(false);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [isDbModalOpen, setIsDbModalOpen] = useState(false);
+  const [isExitBackupOpen, setIsExitBackupOpen] = useState(false);
+  const [isWhatsAppOpen, setIsWhatsAppOpen] = useState(false);
+  const [whatsAppRecipient, setWhatsAppRecipient] = useState<{
+    name: string;
+    phone: string;
+    studentName?: string;
+    type?: 'attendance' | 'fees' | 'grades' | 'general';
+    amount?: number;
+    date?: string;
+  }>({
+    name: 'ولي أمر الطالب',
+    phone: '0509988771',
+    studentName: 'ريان عبد العزيز السبيعي',
+    type: 'attendance'
+  });
 
   // Time ticker
   const [currentTime, setCurrentTime] = useState<string>(
@@ -136,28 +208,71 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
+  // Background Automatic Update Checker
+  useEffect(() => {
+    if (!versionInfo.autoCheckUpdates) return;
+    const updateCheckTimer = setInterval(() => {
+      // Periodic check simulation
+      if (versionInfo.isUpdateAvailable) {
+        addToast(
+          'info',
+          'تحديث متوفر للنظام',
+          `الإصدار الجديد (${versionInfo.latestVersion}) جاهز مع تحديثات الجداول SQL Migrations.`,
+          'تحديث الآن',
+          () => setIsUpdateModalOpen(true)
+        );
+      }
+    }, 120000); // Check every 2 minutes
+    return () => clearInterval(updateCheckTimer);
+  }, [versionInfo.autoCheckUpdates, versionInfo.isUpdateAvailable, versionInfo.latestVersion]);
+
+  // Toast Helper
+  const addToast = (
+    type: ToastNotification['type'],
+    title: string,
+    message: string,
+    actionLabel?: string,
+    onAction?: () => void
+  ) => {
+    const newToast: ToastNotification = {
+      id: 'toast-' + Date.now() + Math.random(),
+      type,
+      title,
+      message,
+      timestamp: new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }),
+      actionLabel,
+      onAction,
+      autoCloseDelay: 5000
+    };
+    setToasts((prev) => [newToast, ...prev]);
+  };
+
+  const removeToast = (id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
+
   // Log Audit Action Helper
-  const logAudit = (action: 'INSERT' | 'UPDATE' | 'DELETE' | 'BACKUP', table: string, id: number, details: string) => {
+  const logAudit = (action: 'INSERT' | 'UPDATE' | 'DELETE' | 'BACKUP' | 'LOGIN', table: string, id: number | string, details: string) => {
     const newLog: AuditLogRecord = {
       id: Date.now(),
       timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
       action,
       tableName: table,
       recordId: id,
-      username: 'admin',
+      username: currentUser ? currentUser.username : 'system',
       details,
       ipAddress: '127.0.0.1 (Local Client)'
     };
     setAuditLogs((prev) => [newLog, ...prev]);
   };
 
-  // Actions
+  // Student Actions
   const handleAddStudent = (newStudentData: Omit<Student, 'id'>) => {
     const newId = students.length > 0 ? Math.max(...students.map((s) => s.id)) + 1 : 1;
     const fullStudent: Student = { ...newStudentData, id: newId };
     setStudents((prev) => [fullStudent, ...prev]);
 
-    // Also auto-generate tuition invoice for the newly registered student
+    // Auto-generate tuition invoice
     const newInvoice: FeeInvoice = {
       id: Date.now(),
       invoiceNumber: `INV-2025-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -177,6 +292,7 @@ export default function App() {
     setInvoices((prev) => [newInvoice, ...prev]);
 
     logAudit('INSERT', 'Students', newId, `تسجيل طالب جديد: ${fullStudent.fullName} (${fullStudent.studentNumber})`);
+    addToast('success', 'تم حفظ الطالب بنجاح', `تم تسجيل الطالب ${fullStudent.fullName} وتوليد الفاتورة الدراسية.`);
   };
 
   const handleDeleteStudent = (studentId: number) => {
@@ -184,6 +300,7 @@ export default function App() {
     setStudents((prev) => prev.filter((s) => s.id !== studentId));
     if (student) {
       logAudit('DELETE', 'Students', studentId, `تعطيل/حذف قيد الطالب: ${student.fullName}`);
+      addToast('warning', 'تم حذف قيد الطالب', `تمت إزالة سجل الطالب ${student.fullName} من القائمة.`);
     }
   };
 
@@ -192,6 +309,7 @@ export default function App() {
     const fullTeacher: Teacher = { ...newTeacherData, id: newId };
     setTeachers((prev) => [fullTeacher, ...prev]);
     logAudit('INSERT', 'Teachers', newId, `إضافة معلم جديد: ${fullTeacher.fullName} (${fullTeacher.employeeNumber})`);
+    addToast('success', 'تمت إضافة المعلم', `تم تسجيل المعلم ${fullTeacher.fullName} في النظام.`);
   };
 
   const handleAddClass = (newClassData: Omit<ClassSection, 'id'>) => {
@@ -199,6 +317,7 @@ export default function App() {
     const fullClass: ClassSection = { ...newClassData, id: newId };
     setClasses((prev) => [...prev, fullClass]);
     logAudit('INSERT', 'Classes', newId, `إضافة قاعة/شعبة دراسية: ${fullClass.className} (${fullClass.roomNumber})`);
+    addToast('success', 'تم حفظ الفصل', `تمت إضافة الشعبة ${fullClass.className} بنجاح.`);
   };
 
   const handleAddSubject = (newSubjectData: Omit<Subject, 'id'>) => {
@@ -206,10 +325,10 @@ export default function App() {
     const fullSubject: Subject = { ...newSubjectData, id: newId };
     setSubjects((prev) => [...prev, fullSubject]);
     logAudit('INSERT', 'Subjects', newId, `إضافة مادة دراسية: ${fullSubject.name} (${fullSubject.code})`);
+    addToast('success', 'تم حفظ المادة', `تم إدراج منهج ${fullSubject.name} في الخطة.`);
   };
 
   const handleSaveAttendance = (records: AttendanceRecord[]) => {
-    // Merge new records with existing attendance
     setAttendance((prev) => {
       const updated = [...prev];
       records.forEach((rec) => {
@@ -224,11 +343,13 @@ export default function App() {
     });
 
     logAudit('INSERT', 'Attendance', records.length, `رصد كشف حضور يومي لعدد ${records.length} طالب`);
+    addToast('success', 'تم حفظ كشف الحضور والغياب', `تم اعتماد حضور ${records.length} طالب وتحديث السجلات بنجاح.`);
   };
 
   const handleUpdateGrade = (updatedGrade: StudentGrade) => {
     setGrades((prev) => prev.map((g) => (g.id === updatedGrade.id ? updatedGrade : g)));
     logAudit('UPDATE', 'Grades', updatedGrade.id, `تعديل درجات الطالب: ${updatedGrade.studentName} لمادة ${updatedGrade.subjectName}`);
+    addToast('success', 'تم تحديث الدرجة', `تم حفظ تقييم الطالب ${updatedGrade.studentName}.`);
   };
 
   const handleAddPaymentReceipt = (receiptData: Omit<PaymentReceipt, 'id'>) => {
@@ -236,7 +357,7 @@ export default function App() {
     const fullReceipt: PaymentReceipt = { ...receiptData, id: newId };
     setPayments((prev) => [fullReceipt, ...prev]);
 
-    // Update corresponding invoice
+    // Update invoice
     setInvoices((prev) =>
       prev.map((inv) => {
         if (inv.invoiceNumber === fullReceipt.invoiceNumber) {
@@ -255,6 +376,7 @@ export default function App() {
     );
 
     logAudit('INSERT', 'Payments', newId, `إصدار سند قبض رقم ${fullReceipt.receiptNumber} بمبلغ ${fullReceipt.amount} ر.س`);
+    addToast('success', 'تم إصدار سند القبض', `تم تسجيل السداد بقيمة ${fullReceipt.amount.toLocaleString()} ريال.`);
   };
 
   const handleAddStaff = (newStaffData: Omit<StaffMember, 'id'>) => {
@@ -262,8 +384,10 @@ export default function App() {
     const fullStaff: StaffMember = { ...newStaffData, id: newId };
     setStaff((prev) => [...prev, fullStaff]);
     logAudit('INSERT', 'Staff', newId, `إضافة موظف جديد: ${fullStaff.fullName} (${fullStaff.jobTitle})`);
+    addToast('success', 'تمت إضافة الموظف', `تم تسجيل الموظف ${fullStaff.fullName} بنجاح.`);
   };
 
+  // Backups
   const handleTriggerBackup = () => {
     const newBackup: BackupRecord = {
       id: Date.now(),
@@ -272,24 +396,112 @@ export default function App() {
       fileSize: '48.2 MB',
       timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
       status: 'Success',
-      createdBy: 'admin'
+      createdBy: currentUser ? currentUser.username : 'admin'
     };
     setBackups((prev) => [newBackup, ...prev]);
     logAudit('BACKUP', 'Database', 1, `إنشاء نسخة احتياطية كاملة: ${newBackup.fileName}`);
+    addToast('success', 'تم إنجاز النسخ الاحتياطي', `تم حفظ ملف النسخة الاحتياطية ${newBackup.fileName} بنجاح.`);
   };
 
+  // User Management & Security Policies
   const handleAddUser = (newUserData: Omit<SystemUser, 'id'>) => {
     const newId = systemUsers.length > 0 ? Math.max(...systemUsers.map((u) => u.id)) + 1 : 1;
     const fullUser: SystemUser = { ...newUserData, id: newId };
     setSystemUsers((prev) => [...prev, fullUser]);
     logAudit('INSERT', 'Users', newId, `إنشاء مستخدم جديد: ${fullUser.username} بصلاحية ${fullUser.role}`);
+    addToast('success', 'تم إنشاء حساب مستخدم', `تم إنشاء الحساب ${fullUser.username} وتفعيل صلاحياته.`);
   };
 
   const handleToggleUserStatus = (userId: number) => {
     setSystemUsers((prev) =>
       prev.map((u) => (u.id === userId ? { ...u, isActive: !u.isActive } : u))
     );
-    logAudit('UPDATE', 'Users', userId, `تغيير حالة حساب المستخدم ID: ${userId}`);
+    logAudit('UPDATE', 'Users', userId, `تغيير حالة تفعيل حساب المستخدم ID: ${userId}`);
+    addToast('info', 'تحديث حالة الحساب', `تم تغيير إذن الدخول للمستخدم.`);
+  };
+
+  // Admin blocking user from accessing system
+  const handleToggleUserBlock = (userId: number, reason?: string) => {
+    setSystemUsers((prev) =>
+      prev.map((u) => {
+        if (u.id === userId) {
+          const newBlockState = !u.isBlocked;
+          return {
+            ...u,
+            isBlocked: newBlockState,
+            isActive: !newBlockState,
+            blockReason: newBlockState ? (reason || 'مخالفة السياسات الأمنية أو تعليق مؤقت') : undefined
+          };
+        }
+        return u;
+      })
+    );
+
+    const user = systemUsers.find((u) => u.id === userId);
+    const actionDesc = user?.isBlocked ? 'إلغاء حظر المستخدم' : 'حظر ومنع المستخدم من دخول النظام';
+    logAudit('UPDATE', 'Users', userId, `${actionDesc}: ${user?.username} (${reason || ''})`);
+    addToast('warning', actionDesc, `تم تحديث ضوابط الدخول للمستخدم ${user?.fullName}.`);
+  };
+
+  // User password change (Own password only)
+  const handlePasswordChanged = (userId: number, newPass: string) => {
+    setSystemUsers((prev) =>
+      prev.map((u) => (u.id === userId ? { ...u, password: newPass } : u))
+    );
+    if (currentUser && currentUser.id === userId) {
+      setCurrentUser((prev) => (prev ? { ...prev, password: newPass } : null));
+    }
+    logAudit('UPDATE', 'Users', userId, `قام المستخدم بتغيير كلمة المرور الخاصة به بنجاح`);
+    addToast('success', 'تم تغيير كلمة المرور بنجاح', 'تم تحديث كلمة المرور المشفرة الخاصة بك في قاعدة البيانات.');
+  };
+
+  // System Update & SQL Migrations
+  const handleApplyUpdate = (updatedInfo: SystemVersionInfo) => {
+    setVersionInfo(updatedInfo);
+    logAudit('UPDATE', 'SystemVersion', 1, `ترقية النظام وتطبيق هجرة قاعدة البيانات Migration إلى الإصدار ${updatedInfo.currentVersion}`);
+    addToast('success', 'تم تحديث النظام وترقية قاعدة البيانات', `أصبح النظام الآن على الإصدار ${updatedInfo.currentVersion} بنجاح.`);
+  };
+
+  // Database Connection Configuration Save
+  const handleSaveDbConfig = (newConfig: DbConnectionConfig) => {
+    setDbConfig(newConfig);
+    logAudit('UPDATE', 'DbConnection', 1, `تحديث إعدادات ربط خادم SQL Server: ${newConfig.server}:${newConfig.port}/${newConfig.database}`);
+    addToast('success', 'تم حفظ إعدادات قاعدة البيانات', `تم التحقق والربط بخادم ${newConfig.server} بنجاح.`);
+  };
+
+  // Program License Update
+  const handleUpdateLicense = (newLicense: LicenseInfo) => {
+    setLicense(newLicense);
+    logAudit('UPDATE', 'License', 1, `تجديد وتحديث ترخيص النظام: ${newLicense.licenseKey} حتى تاريخ ${newLicense.expiryDate}`);
+    addToast('success', 'تم تفعيل الترخيص بنجاح', `تم تجديد صلاحية البرنامج حتى ${newLicense.expiryDate} (${newLicense.daysRemaining} يوم متبقي).`);
+  };
+
+  // Open WhatsApp with data
+  const handleOpenWhatsAppModal = (recipientData: {
+    name: string;
+    phone: string;
+    studentName?: string;
+    type?: 'attendance' | 'fees' | 'grades' | 'general';
+    amount?: number;
+    date?: string;
+  }) => {
+    setWhatsAppRecipient(recipientData);
+    setIsWhatsAppOpen(true);
+  };
+
+  // Exit with backup confirmation
+  const handleConfirmExitWithBackup = () => {
+    handleTriggerBackup();
+    addToast('success', 'تم أخذ نسخة احتياطية كاملة', 'جاري إغلاق الجلسة بأمان...');
+    setTimeout(() => {
+      setCurrentUser(null);
+    }, 1200);
+  };
+
+  const handleConfirmExitWithoutBackup = () => {
+    logAudit('LOGIN', 'Users', currentUser?.id || 1, 'تسجيل خروج فوري بدون نسخ احتياطي');
+    addToast('info', 'تسجيل خروج', 'تم إغلاق الجلسة الحالية.');
+    setCurrentUser(null);
   };
 
   const classesList = Array.from(new Set(classes.map((c) => c.className)));
@@ -301,17 +513,36 @@ export default function App() {
     { key: 'teachers' as TabKey, label: 'المعلمون', icon: Users, badge: teachers.length },
     { key: 'classes' as TabKey, label: 'الفصول والقاعات', icon: School },
     { key: 'subjects' as TabKey, label: 'المناهج والمواد', icon: BookOpen },
-    { key: 'attendance' as TabKey, label: 'الحضور والغياب', icon: CalendarCheck },
+    { key: 'attendance' as TabKey, label: 'الحضور والغياب والواتساب', icon: CalendarCheck },
     { key: 'exams' as TabKey, label: 'الكنترول والدرجات', icon: Award },
     { key: 'finance' as TabKey, label: 'المالية والرسوم', icon: Receipt },
     { key: 'hr' as TabKey, label: 'الموارد البشرية', icon: Briefcase },
     { key: 'reports' as TabKey, label: 'التقارير الرسمية', icon: BarChart3 },
     { key: 'audit' as TabKey, label: 'التدقيق الأمني', icon: History },
     { key: 'backup' as TabKey, label: 'النسخ الاحتياطي', icon: Database },
-    { key: 'security' as TabKey, label: 'المستخدمين والأدوار', icon: Shield },
+    { key: 'security' as TabKey, label: 'المستخدمين والأمان', icon: Shield },
     { key: 'settings' as TabKey, label: 'إعدادات النظام', icon: Settings },
     { key: 'architecture' as TabKey, label: 'أكواد VB.NET و SQL', icon: Code, highlight: true }
   ];
+
+  // If user is not authenticated, show the Login Screen
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen bg-slate-950 font-['Cairo',sans-serif]">
+        <LoginScreen
+          users={systemUsers}
+          settings={settings}
+          onLoginSuccess={(user) => {
+            setCurrentUser(user);
+            logAudit('LOGIN', 'Users', user.id, `تسجيل دخول ناجح للمستخدم ${user.username}`);
+            addToast('success', `مرحباً بك أ. ${user.fullName}`, 'تم تسجيل الدخول بنجاح للنظام.');
+          }}
+        />
+        {/* Toast Container on Login Screen */}
+        <ToastContainer toasts={toasts} onDismiss={removeToast} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-['Cairo',sans-serif]">
@@ -337,27 +568,72 @@ export default function App() {
           </div>
         </div>
 
-        {/* Center: System Status Indicators */}
-        <div className="hidden lg:flex items-center gap-4 text-xs font-mono">
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span className="text-slate-300">خادم SQL Server:</span>
-            <span className="text-emerald-400 font-bold">متصل (Online)</span>
-          </div>
+        {/* Center: System Status Indicators & Quick Configuration */}
+        <div className="hidden lg:flex items-center gap-3 text-xs font-mono">
+          {/* SQL Server Direct Connection Indicator */}
+          <button
+            onClick={() => setIsDbModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-blue-500 transition-colors cursor-pointer"
+            title="إعدادات واختبار اتصال SQL Server الفعلي"
+          >
+            <span className={`w-2 h-2 rounded-full ${dbConfig.status === 'Connected' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></span>
+            <span className="text-slate-300">خادم SQL:</span>
+            <span className="text-emerald-400 font-bold">{dbConfig.server}:{dbConfig.port}</span>
+          </button>
 
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800">
-            <HardDrive className="w-3.5 h-3.5 text-blue-400" />
-            <span className="text-slate-300">قاعدة البيانات:</span>
-            <span className="text-blue-300 font-bold">SchoolManagementDB</span>
-          </div>
+          {/* License & Validity Status */}
+          <button
+            onClick={() => setIsLicenseModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-amber-500 transition-colors cursor-pointer"
+            title="صلاحية ترخيص البرنامج ونموذج التفعيل"
+          >
+            <KeyRound className="w-3.5 h-3.5 text-amber-400" />
+            <span className="text-slate-300">الترخيص:</span>
+            <span className="text-amber-300 font-bold">{license.daysRemaining} يوم</span>
+          </button>
+
+          {/* Version & Migration Update Badge */}
+          <button
+            onClick={() => setIsUpdateModalOpen(true)}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-xl border transition-colors cursor-pointer ${
+              versionInfo.isUpdateAvailable
+                ? 'bg-blue-950/80 border-blue-600 text-blue-300 hover:bg-blue-900'
+                : 'bg-slate-950 border-slate-800 text-slate-400'
+            }`}
+            title="التحديث التلقائي وترقية قاعدة البيانات"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${versionInfo.isUpdateAvailable ? 'text-blue-400 animate-spin' : 'text-slate-500'}`} />
+            <span>v{versionInfo.currentVersion}</span>
+            {versionInfo.isUpdateAvailable && (
+              <span className="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span>
+            )}
+          </button>
 
           <div className="text-slate-400 font-mono px-2 py-1">
             {currentTime}
           </div>
         </div>
 
-        {/* Right: Quick Action Buttons & Window Controls */}
+        {/* Right: Quick Action Buttons, WhatsApp, User Profile & Window Controls */}
         <div className="flex items-center gap-2">
+          {/* WhatsApp Quick Modal Button */}
+          <button
+            onClick={() => {
+              setWhatsAppRecipient({
+                name: 'السادة أولياء الأمور الكرام',
+                phone: '0551234567',
+                studentName: 'جميع الطلاب',
+                type: 'general'
+              });
+              setIsWhatsAppOpen(true);
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700/80 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold border border-emerald-500/50 shadow-md shadow-emerald-700/20 transition-all cursor-pointer"
+            title="إرسال رسائل واتساب مباشرة لأولياء الأمور"
+          >
+            <MessageSquare className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">واتساب أولياء الأمور</span>
+          </button>
+
           <button
             onClick={() => setIsAddStudentOpen(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-600/20 transition-all cursor-pointer"
@@ -369,33 +645,49 @@ export default function App() {
 
           <button
             onClick={() => setIsAddReceiptOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-600/20 transition-all cursor-pointer"
             title="إصدار سند قبض (اختصار F3)"
           >
             <CreditCard className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">سند قبض</span>
           </button>
 
-          {/* User Avatar Badge */}
-          <div className="flex items-center gap-2 pl-2 pr-3 py-1 bg-slate-950 border border-slate-800 rounded-xl text-xs">
+          {/* User Avatar Badge with Change Password Action */}
+          <div className="flex items-center gap-2 pl-2 pr-2.5 py-1 bg-slate-950 border border-slate-800 rounded-xl text-xs">
             <div className="w-6 h-6 rounded-lg bg-rose-600 text-white font-bold flex items-center justify-center text-[11px]">
-              م
+              {currentUser.fullName.charAt(0) || 'م'}
             </div>
-            <div className="text-right">
-              <div className="font-bold text-slate-200">المدير العام (admin)</div>
-              <div className="text-[10px] text-emerald-400 font-mono">صلاحيات كاملة CRUD</div>
+            <div className="text-right hidden sm:block">
+              <div className="font-bold text-slate-200">{currentUser.fullName}</div>
+              <div className="text-[10px] text-emerald-400 font-mono">{currentUser.role}</div>
             </div>
+
+            {/* Change Password Icon Button */}
+            <button
+              onClick={() => setIsChangePasswordOpen(true)}
+              className="p-1 hover:bg-slate-800 text-slate-400 hover:text-blue-300 rounded transition-colors cursor-pointer"
+              title="تغيير كلمة المرور الخاصة بي"
+            >
+              <KeyRound className="w-3.5 h-3.5" />
+            </button>
+
+            {/* Logout / Exit Prompt */}
+            <button
+              onClick={() => setIsExitBackupOpen(true)}
+              className="p-1 hover:bg-rose-950 text-slate-400 hover:text-rose-400 rounded transition-colors cursor-pointer"
+              title="الخروج من البرنامج مع خيار النسخ الاحتياطي التلقائي"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
           </div>
 
-          {/* Window Chrome Mock Controls */}
-          <div className="hidden sm:flex items-center gap-1 mr-2 border-r border-slate-800 pr-2">
-            <button className="p-1.5 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition-colors" title="تصغير">
-              <Minus className="w-3.5 h-3.5" />
-            </button>
-            <button className="p-1.5 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition-colors" title="تكبير">
-              <Square className="w-3 h-3" />
-            </button>
-            <button className="p-1.5 rounded hover:bg-red-600 text-slate-400 hover:text-white transition-colors" title="إغلاق">
+          {/* Window Controls */}
+          <div className="hidden sm:flex items-center gap-1 mr-1 border-r border-slate-800 pr-2">
+            <button
+              onClick={() => setIsExitBackupOpen(true)}
+              className="p-1.5 rounded hover:bg-red-600 text-slate-400 hover:text-white transition-colors cursor-pointer"
+              title="إغلاق البرنامج مع خيار النسخ الاحتياطي"
+            >
               <X className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -466,6 +758,14 @@ export default function App() {
             onAddStudent={handleAddStudent}
             onDeleteStudent={handleDeleteStudent}
             classesList={classesList}
+            onOpenWhatsApp={(student) =>
+              handleOpenWhatsAppModal({
+                name: `ولي أمر الطالب: ${student.fullName}`,
+                phone: student.primaryParentPhone || '',
+                studentName: student.fullName,
+                type: 'general'
+              })
+            }
           />
         )}
 
@@ -487,6 +787,7 @@ export default function App() {
             attendance={attendance}
             onSaveAttendance={handleSaveAttendance}
             classesList={classesList}
+            onOpenWhatsApp={(info) => handleOpenWhatsAppModal(info)}
           />
         )}
 
@@ -506,6 +807,15 @@ export default function App() {
             onOpenReceiptModal={() => setIsAddReceiptOpen(true)}
             isReceiptModalOpen={isAddReceiptOpen}
             onCloseReceiptModal={() => setIsAddReceiptOpen(false)}
+            onOpenWhatsApp={(invoice) =>
+              handleOpenWhatsAppModal({
+                name: `ولي أمر الطالب: ${invoice.studentName}`,
+                phone: '0551234567',
+                studentName: invoice.studentName,
+                type: 'fees',
+                amount: invoice.remainingAmount
+              })
+            }
           />
         )}
 
@@ -533,17 +843,27 @@ export default function App() {
             users={systemUsers}
             onAddUser={handleAddUser}
             onToggleUserStatus={handleToggleUserStatus}
+            onToggleUserBlock={handleToggleUserBlock}
+            onOpenChangePassword={() => setIsChangePasswordOpen(true)}
           />
         )}
 
         {activeTab === 'settings' && (
-          <SettingsTab settings={settings} onSaveSettings={setSettings} />
+          <SettingsTab
+            settings={settings}
+            onSaveSettings={setSettings}
+            onOpenDbModal={() => setIsDbModalOpen(true)}
+            onOpenLicenseModal={() => setIsLicenseModalOpen(true)}
+            onOpenUpdateModal={() => setIsUpdateModalOpen(true)}
+          />
         )}
 
         {activeTab === 'architecture' && <ArchitectureTab />}
       </main>
 
-      {/* 4. Global Modals */}
+      {/* 4. Global Modals & Feature Dialogs */}
+
+      {/* Add Student Modal */}
       <AddStudentModal
         isOpen={isAddStudentOpen}
         onClose={() => setIsAddStudentOpen(false)}
@@ -551,6 +871,7 @@ export default function App() {
         classesList={classesList}
       />
 
+      {/* Add Receipt Modal */}
       <AddReceiptModal
         isOpen={isAddReceiptOpen}
         onClose={() => setIsAddReceiptOpen(false)}
@@ -558,21 +879,80 @@ export default function App() {
         onAddReceipt={handleAddPaymentReceipt}
       />
 
+      {/* WhatsApp Message Modal */}
+      <WhatsAppModal
+        isOpen={isWhatsAppOpen}
+        onClose={() => setIsWhatsAppOpen(false)}
+        defaultRecipient={whatsAppRecipient}
+        onMessageSent={(log) => {
+          logAudit('INSERT', 'WhatsAppMessageLogs', log.recipientPhone, `إرسال رسالة واتساب إلى ${log.recipientName} (${log.recipientPhone})`);
+          addToast('success', 'تم إرسال رسالة الواتساب', `تم فتح محادثة الواتساب وتجهيز الرسالة لولي الأمر.`);
+        }}
+      />
+
+      {/* Change Password Modal (User changes own password only) */}
+      <ChangePasswordModal
+        isOpen={isChangePasswordOpen}
+        currentUser={currentUser}
+        onClose={() => setIsChangePasswordOpen(false)}
+        onPasswordChanged={handlePasswordChanged}
+      />
+
+      {/* Program License & Validity Modal */}
+      <LicenseModal
+        isOpen={isLicenseModalOpen}
+        license={license}
+        onClose={() => setIsLicenseModalOpen(false)}
+        onUpdateLicense={handleUpdateLicense}
+      />
+
+      {/* System Update & SQL Migrations Modal */}
+      <SystemUpdateModal
+        isOpen={isUpdateModalOpen}
+        versionInfo={versionInfo}
+        onClose={() => setIsUpdateModalOpen(false)}
+        onApplyUpdate={handleApplyUpdate}
+      />
+
+      {/* Real SQL Server Database Connection Configuration */}
+      <DbConnectionModal
+        isOpen={isDbModalOpen}
+        config={dbConfig}
+        onClose={() => setIsDbModalOpen(false)}
+        onSaveConfig={handleSaveDbConfig}
+      />
+
+      {/* Exit with Auto-Backup Prompt Modal */}
+      <ExitBackupModal
+        isOpen={isExitBackupOpen}
+        onClose={() => setIsExitBackupOpen(false)}
+        onConfirmExitWithBackup={handleConfirmExitWithBackup}
+        onConfirmExitWithoutBackup={handleConfirmExitWithoutBackup}
+      />
+
+      {/* Smart Side Toast Notifications Container */}
+      <ToastContainer toasts={toasts} onDismiss={removeToast} />
+
       {/* 5. Desktop Status Bar (Bottom Bar) */}
       <footer className="bg-slate-900 border-t border-slate-800 px-4 py-1.5 flex flex-wrap items-center justify-between text-[11px] text-slate-400 font-mono select-none z-20">
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-            <span className="text-slate-300">خادم SQL Server:</span>
-            <span className="text-emerald-400 font-bold">127.0.0.1:1433 (Ready)</span>
-          </div>
+          <button
+            onClick={() => setIsDbModalOpen(true)}
+            className="flex items-center gap-1.5 hover:text-emerald-300 transition-colors cursor-pointer"
+          >
+            <span className={`w-2 h-2 rounded-full ${dbConfig.status === 'Connected' ? 'bg-emerald-400' : 'bg-rose-400'}`}></span>
+            <span className="text-slate-300">خادم SQL:</span>
+            <span className="text-emerald-400 font-bold">{dbConfig.server}:{dbConfig.port} ({dbConfig.status})</span>
+          </button>
 
           <span>|</span>
 
-          <div>
-            ترميز القاعدة:{' '}
-            <span className="text-slate-300 font-semibold">Arabic_100_CI_AS_SC_UTF8</span>
-          </div>
+          <button
+            onClick={() => setIsLicenseModalOpen(true)}
+            className="hover:text-amber-300 transition-colors cursor-pointer"
+          >
+            الترخيص: <span className="text-amber-400 font-bold">{license.edition} ({license.daysRemaining} يوم متبقي)</span>
+          </button>
 
           <span className="hidden md:inline">|</span>
 
@@ -585,11 +965,16 @@ export default function App() {
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="text-slate-500">وقت الاستجابة: 2.4ms</span>
+          <span className="text-slate-500">وقت الاستجابة: {dbConfig.latencyMs}ms</span>
           <span>|</span>
-          <span className="text-slate-400">المستخدم: admin</span>
+          <span className="text-slate-400">المستخدم: {currentUser.username}</span>
           <span>|</span>
-          <span className="text-emerald-400 font-bold">نظام إدارتي v2.5 Enterprise</span>
+          <button
+            onClick={() => setIsUpdateModalOpen(true)}
+            className="text-emerald-400 hover:text-emerald-300 font-bold transition-colors cursor-pointer"
+          >
+            نظام إدارتي v{versionInfo.currentVersion}
+          </button>
         </div>
       </footer>
     </div>

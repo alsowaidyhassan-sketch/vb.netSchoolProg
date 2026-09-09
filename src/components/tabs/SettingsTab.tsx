@@ -1,13 +1,22 @@
 import React, { useState } from 'react';
-import { Settings, Save, CheckCircle2, Database, ShieldCheck, School, Globe } from 'lucide-react';
+import { Settings, Save, CheckCircle2, Database, ShieldCheck, School, Globe, KeyRound, RefreshCw, Server } from 'lucide-react';
 import { SchoolSettings } from '../../types';
 
 interface SettingsTabProps {
   settings: SchoolSettings;
   onSaveSettings: (settings: SchoolSettings) => void;
+  onOpenDbModal?: () => void;
+  onOpenLicenseModal?: () => void;
+  onOpenUpdateModal?: () => void;
 }
 
-export const SettingsTab: React.FC<SettingsTabProps> = ({ settings, onSaveSettings }) => {
+export const SettingsTab: React.FC<SettingsTabProps> = ({
+  settings,
+  onSaveSettings,
+  onOpenDbModal,
+  onOpenLicenseModal,
+  onOpenUpdateModal
+}) => {
   const [formData, setFormData] = useState<SchoolSettings>(settings);
   const [isSaved, setIsSaved] = useState(false);
   const [testingDb, setTestingDb] = useState(false);
@@ -161,16 +170,28 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ settings, onSaveSettin
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
               <Database className="w-4 h-4 text-emerald-400" />
-              <span>إعدادات الاتصال بخادم Microsoft SQL Server</span>
+              <span>إعدادات الاتصال بخادم Microsoft SQL Server الفعلي</span>
             </h3>
-            <button
-              type="button"
-              onClick={handleTestConnection}
-              disabled={testingDb}
-              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl border border-slate-700 transition-colors cursor-pointer"
-            >
-              {testingDb ? 'جاري الفحص...' : 'اختبار الاتصال بقاعدة البيانات (Test Connection)'}
-            </button>
+            <div className="flex items-center gap-2">
+              {onOpenDbModal && (
+                <button
+                  type="button"
+                  onClick={onOpenDbModal}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                >
+                  <Server className="w-3.5 h-3.5" />
+                  <span>تهيئة ربط الخادم الفعلي</span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={handleTestConnection}
+                disabled={testingDb}
+                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl border border-slate-700 transition-colors cursor-pointer text-xs"
+              >
+                {testingDb ? 'جاري الفحص...' : 'اختبار الاتصال'}
+              </button>
+            </div>
           </div>
 
           <div>
@@ -192,20 +213,44 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ settings, onSaveSettin
         </div>
 
         {/* Commercial License Card */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-3">
-          <h3 className="text-sm font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-3">
-            <ShieldCheck className="w-4 h-4 text-purple-400" />
-            <span>معلومات رخصة البرنامج (Software Commercial License)</span>
-          </h3>
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-purple-400" />
+              <span>معلومات رخصة البرنامج وصلاحية الاستخدام (Software License)</span>
+            </h3>
+            {onOpenLicenseModal && (
+              <button
+                type="button"
+                onClick={onOpenLicenseModal}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
+              >
+                <KeyRound className="w-3.5 h-3.5" />
+                <span>إدارة وتجديد مفتاح التفعيل</span>
+              </button>
+            )}
+          </div>
 
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <div className="text-slate-300 font-semibold">حالة الترخيص: <span className="text-emerald-400 font-bold font-mono">مرخص تجارياً - مدى الحياة (Lifetime Enterprise)</span></div>
-              <div className="text-slate-500 font-mono text-[11px] mt-0.5">مفتاح المنتج: EDURA-PRO-9842-8874-SQL-2025</div>
+              <div className="text-slate-300 font-semibold">حالة الترخيص: <span className="text-emerald-400 font-bold font-mono">مرخص تجارياً (Enterprise Edition)</span></div>
+              <div className="text-slate-500 font-mono text-[11px] mt-0.5">مفتاح المنتج: EDURA-2026-ENT-9842-8871-KSA</div>
             </div>
-            <span className="px-3 py-1 bg-purple-950 text-purple-300 font-bold rounded-full border border-purple-800 text-[11px]">
-              النسخة v2.5.0 Gold
-            </span>
+            <div className="flex items-center gap-2">
+              {onOpenUpdateModal && (
+                <button
+                  type="button"
+                  onClick={onOpenUpdateModal}
+                  className="flex items-center gap-1 px-3 py-1 bg-blue-950 hover:bg-blue-900 text-blue-300 font-bold rounded-xl border border-blue-800 text-[11px] transition-colors cursor-pointer"
+                >
+                  <RefreshCw className="w-3 h-3 text-blue-400" />
+                  <span>الترقية والهجرة (Migrations)</span>
+                </button>
+              )}
+              <span className="px-3 py-1 bg-purple-950 text-purple-300 font-bold rounded-full border border-purple-800 text-[11px]">
+                النسخة v2.5.0 Enterprise
+              </span>
+            </div>
           </div>
         </div>
       </form>

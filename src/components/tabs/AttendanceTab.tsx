@@ -8,7 +8,8 @@ import {
   Save,
   Check,
   Calendar,
-  Filter
+  Filter,
+  MessageSquare
 } from 'lucide-react';
 import { Student, AttendanceRecord } from '../../types';
 
@@ -17,13 +18,21 @@ interface AttendanceTabProps {
   attendance: AttendanceRecord[];
   onSaveAttendance: (records: AttendanceRecord[]) => void;
   classesList: string[];
+  onOpenWhatsApp?: (recipient: {
+    name: string;
+    phone: string;
+    studentName: string;
+    type: 'attendance' | 'fees' | 'grades' | 'general';
+    date?: string;
+  }) => void;
 }
 
 export const AttendanceTab: React.FC<AttendanceTabProps> = ({
   students,
   attendance,
   onSaveAttendance,
-  classesList
+  classesList,
+  onOpenWhatsApp
 }) => {
   const [selectedDate, setSelectedDate] = useState('2025-05-12');
   const [selectedClass, setSelectedClass] = useState(classesList[0] || 'الصف الأول الابتدائي');
@@ -252,6 +261,25 @@ export const AttendanceTab: React.FC<AttendanceTabProps> = ({
                     >
                       غائب
                     </button>
+
+                    {onOpenWhatsApp && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onOpenWhatsApp({
+                            name: `ولي أمر الطالب ${s.fullName}`,
+                            phone: s.primaryParentPhone || '',
+                            studentName: s.fullName,
+                            type: currentStatus === 'Absent' ? 'attendance' : 'general',
+                            date: selectedDate
+                          })
+                        }
+                        title="إرسال رسالة واتساب لولي الأمر"
+                        className="p-1.5 bg-emerald-950/80 hover:bg-emerald-900 text-emerald-400 border border-emerald-800/80 rounded-lg transition-colors cursor-pointer"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 </div>
               );

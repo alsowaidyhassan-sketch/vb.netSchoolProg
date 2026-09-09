@@ -7,7 +7,8 @@ import {
   Printer,
   FileCheck2,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  MessageSquare
 } from 'lucide-react';
 import { FeeInvoice, PaymentReceipt } from '../../types';
 import { ModernDataGrid, Column } from '../common/ModernDataGrid';
@@ -20,6 +21,7 @@ interface FinanceTabProps {
   onOpenReceiptModal: () => void;
   isReceiptModalOpen: boolean;
   onCloseReceiptModal: () => void;
+  onOpenWhatsApp?: (invoice: FeeInvoice) => void;
 }
 
 export const FinanceTab: React.FC<FinanceTabProps> = ({
@@ -28,7 +30,8 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({
   onAddPaymentReceipt,
   onOpenReceiptModal,
   isReceiptModalOpen,
-  onCloseReceiptModal
+  onCloseReceiptModal,
+  onOpenWhatsApp
 }) => {
   const [activeSubTab, setActiveSubTab] = useState<'invoices' | 'receipts'>('invoices');
   const [selectedReceiptForPrint, setSelectedReceiptForPrint] = useState<PaymentReceipt | null>(null);
@@ -73,7 +76,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({
       sortable: true,
       render: (inv) => (
         <span className="font-mono text-xs font-bold text-slate-200">
-          {inv.finalAmount.toLocaleString()} ر.س
+          {inv.finalAmount.toLocaleString()} د.ع
         </span>
       )
     },
@@ -83,7 +86,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({
       sortable: true,
       render: (inv) => (
         <span className="font-mono text-xs font-bold text-emerald-400">
-          {inv.paidAmount.toLocaleString()} ر.س
+          {inv.paidAmount.toLocaleString()} د.ع
         </span>
       )
     },
@@ -93,7 +96,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({
       sortable: true,
       render: (inv) => (
         <span className="font-mono text-xs font-bold text-rose-400">
-          {inv.remainingAmount.toLocaleString()} ر.س
+          {inv.remainingAmount.toLocaleString()} د.ع
         </span>
       )
     },
@@ -113,6 +116,26 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({
         >
           {inv.status === 'Paid' ? 'مسدد بالكامل' : inv.status === 'Partial' ? 'مسدد جزئياً' : 'غير مسدد'}
         </span>
+      )
+    },
+    {
+      key: 'actions',
+      header: 'واتساب',
+      width: '90px',
+      render: (inv) => (
+        onOpenWhatsApp ? (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenWhatsApp(inv);
+            }}
+            className="flex items-center gap-1 px-2 py-1 bg-emerald-950 hover:bg-emerald-900 text-emerald-400 hover:text-emerald-300 border border-emerald-800 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+            title="إرسال إشعار مطالبة مالية بالواتساب"
+          >
+            <MessageSquare className="w-3.5 h-3.5" />
+            <span>تذكير</span>
+          </button>
+        ) : null
       )
     }
   ];
@@ -141,7 +164,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({
       sortable: true,
       render: (r) => (
         <span className="font-mono text-xs font-black text-emerald-400">
-          {r.amount.toLocaleString()} ريال
+          {r.amount.toLocaleString()} د.ع
         </span>
       )
     },
@@ -230,13 +253,13 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
           <div className="text-xs text-slate-400 font-semibold">إجمالي المطالبات والفواتير</div>
-          <div className="text-2xl font-black text-white mt-1">{totalInvoiced.toLocaleString()} ر.س</div>
+          <div className="text-2xl font-black text-white mt-1">{totalInvoiced.toLocaleString()} د.ع</div>
           <div className="text-[11px] text-slate-500 mt-1">شاملة لكافة الطلاب والرسوم</div>
         </div>
 
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
           <div className="text-xs text-emerald-400 font-semibold">إجمالي الرسوم المحصلة فعلياً</div>
-          <div className="text-2xl font-black text-emerald-400 mt-1">{totalCollected.toLocaleString()} ر.س</div>
+          <div className="text-2xl font-black text-emerald-400 mt-1">{totalCollected.toLocaleString()} د.ع</div>
           <div className="text-[11px] text-emerald-500 mt-1">
             نسبة التحصيل: {totalInvoiced > 0 ? Math.round((totalCollected / totalInvoiced) * 100) : 0}%
           </div>
@@ -244,7 +267,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({
 
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
           <div className="text-xs text-rose-400 font-semibold">المبالغ المتبقية والذمم المعلقة</div>
-          <div className="text-2xl font-black text-rose-400 mt-1">{totalRemaining.toLocaleString()} ر.س</div>
+          <div className="text-2xl font-black text-rose-400 mt-1">{totalRemaining.toLocaleString()} د.ع</div>
           <div className="text-[11px] text-rose-400 mt-1">تتطلب متابعة وإرسال تذكيرات</div>
         </div>
       </div>
@@ -285,12 +308,12 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({
             {/* School Receipt Header */}
             <div className="border-b-2 border-slate-900 pb-4 flex justify-between items-start">
               <div>
-                <h2 className="text-lg font-black text-slate-900">مدارس الرواد النموذجية الأهلية</h2>
-                <div className="text-xs text-slate-600">الرقم الضريبي: 310245678900003</div>
-                <div className="text-xs text-slate-600">الرياض - المملكة العربية السعودية</div>
+                <h2 className="text-lg font-black text-slate-900">ثانوية دجلة الأهلية للبنين</h2>
+                <div className="text-xs text-slate-600">جمهورية العراق - وزارة التربية</div>
+                <div className="text-xs text-slate-600">بغداد - الكرخ - حي المنصور</div>
               </div>
               <div className="text-left font-mono">
-                <div className="text-xs text-slate-500">سند قبض مالي</div>
+                <div className="text-xs text-slate-500">سند قبض رسمي</div>
                 <div className="text-base font-bold text-blue-800">{selectedReceiptForPrint.receiptNumber}</div>
                 <div className="text-xs text-slate-600">التاريخ: {selectedReceiptForPrint.date}</div>
               </div>
@@ -306,7 +329,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({
               <div className="flex justify-between border-b border-slate-200 py-2">
                 <span className="text-slate-600">المبلغ رقماً:</span>
                 <span className="font-bold font-mono text-base text-emerald-700">
-                  {selectedReceiptForPrint.amount.toLocaleString()} ريال سعودي
+                  {selectedReceiptForPrint.amount.toLocaleString()} د.ع (دينار عراقي)
                 </span>
               </div>
 

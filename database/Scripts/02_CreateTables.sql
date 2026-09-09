@@ -18,7 +18,7 @@ CREATE TABLE [dbo].[Schools] (
     [Website] NVARCHAR(200) NULL,
     [Address] NVARCHAR(500) NOT NULL,
     [City] NVARCHAR(100) NOT NULL,
-    [Country] NVARCHAR(100) NOT NULL DEFAULT N'المملكة العربية السعودية',
+    [Country] NVARCHAR(100) NOT NULL DEFAULT N'جمهورية العراق',
     [PostalCode] NVARCHAR(20) NULL,
     [LogoPath] NVARCHAR(500) NULL,
     [PrincipalName] NVARCHAR(150) NOT NULL,
@@ -163,7 +163,7 @@ CREATE TABLE [dbo].[Staff] (
     [FullName] AS ([FirstName] + ' ' + ISNULL([SecondName] + ' ', '') + [LastName]) PERSISTED,
     [Gender] NVARCHAR(10) NOT NULL, -- ذكر / أنثى
     [DateOfBirth] DATE NOT NULL,
-    [Nationality] NVARCHAR(100) NOT NULL DEFAULT N'سعودي',
+    [Nationality] NVARCHAR(100) NOT NULL DEFAULT N'عراقي',
     [Phone] NVARCHAR(20) NOT NULL,
     [Email] NVARCHAR(150) NOT NULL,
     [Address] NVARCHAR(500) NULL,
@@ -263,25 +263,49 @@ CREATE TABLE [dbo].[Parents] (
 );
 GO
 
--- 14. الطلاب (Students)
+-- 14. الطلاب (Students - المعايير العراقية: الاسم الخماسي، وثائق الهوية، والعنوان العراقي)
 CREATE TABLE [dbo].[Students] (
     [StudentId] INT IDENTITY(1,1) NOT NULL,
     [SchoolId] INT NOT NULL,
     [StudentNumber] NVARCHAR(50) NOT NULL,
     [Barcode] NVARCHAR(100) NULL,
-    [NationalId] NVARCHAR(30) NOT NULL,
-    [FirstName] NVARCHAR(100) NOT NULL,
+    
+    -- وثائق الهوية العراقية
+    [IdentityDocumentType] NVARCHAR(50) NOT NULL DEFAULT N'البطاقة الوطنية الموحدة', -- البطاقة الوطنية الموحدة / هوية الأحوال المدنية / شهادة الجنسية العراقية / جواز السفر
+    [NationalId] NVARCHAR(30) NOT NULL, -- رقم البطاقة الوطنية (12 رقماً) أو رقم الهوية
+
+    -- الاسم الخماسي العراقي واسم الأم
+    [FirstName] NVARCHAR(100) NOT NULL, -- الاسم الأول
+    [FatherName] NVARCHAR(100) NOT NULL, -- اسم الأب
+    [GrandFatherName] NVARCHAR(100) NOT NULL, -- اسم الجد
+    [GreatGrandFatherName] NVARCHAR(100) NULL, -- اسم الجد الأعلى
+    [FamilyName] NVARCHAR(100) NULL, -- اللقب أو العشيرة
+    [MotherName] NVARCHAR(150) NULL, -- اسم الأم الثلاثي
+
+    -- حقول التوافق مع الأنظمة السابقة
     [SecondName] NVARCHAR(100) NULL,
     [ThirdName] NVARCHAR(100) NULL,
     [LastName] NVARCHAR(100) NOT NULL,
-    [FullName] AS ([FirstName] + ' ' + ISNULL([SecondName] + ' ', '') + ISNULL([ThirdName] + ' ', '') + [LastName]) PERSISTED,
+    [FullName] AS ([FirstName] + ' ' + [FatherName] + ' ' + [GrandFatherName] + ISNULL(' ' + [GreatGrandFatherName], '') + ISNULL(' ' + [FamilyName], '')) PERSISTED,
+
     [Gender] NVARCHAR(10) NOT NULL, -- ذكر / أنثى
     [DateOfBirth] DATE NOT NULL,
-    [BirthPlace] NVARCHAR(100) NULL,
-    [Nationality] NVARCHAR(100) NOT NULL DEFAULT N'سعودي',
-    [Phone] NVARCHAR(20) NULL,
+    [BirthPlace] NVARCHAR(100) NULL DEFAULT N'بغداد',
+    [Nationality] NVARCHAR(100) NOT NULL DEFAULT N'عراقي',
+    [Phone] NVARCHAR(20) NULL, -- أرقام الهواتف العراقية 07XXXXXXXXX
     [Email] NVARCHAR(150) NULL,
+
+    -- تفاصيل العنوان السكني في جمهورية العراق
+    [Province] NVARCHAR(100) NOT NULL DEFAULT N'بغداد', -- المحافظة
+    [District] NVARCHAR(100) NULL, -- القضاء
+    [SubDistrict] NVARCHAR(100) NULL, -- الناحية
+    [Area] NVARCHAR(150) NULL, -- الحي أو المنطقة
+    [Mahalla] NVARCHAR(50) NULL, -- المحلة
+    [Zuqaq] NVARCHAR(50) NULL, -- الزقاق
+    [HouseNumber] NVARCHAR(50) NULL, -- رقم الدار
+    [NearestLandmark] NVARCHAR(200) NULL, -- أقرب نقطة دالة
     [Address] NVARCHAR(500) NULL,
+
     [PhotoPath] NVARCHAR(500) NULL,
     [PrimaryParentId] INT NULL,
     [EmergencyContactName] NVARCHAR(150) NOT NULL,
@@ -301,6 +325,27 @@ CREATE TABLE [dbo].[Students] (
     CONSTRAINT [PK_Students] PRIMARY KEY CLUSTERED ([StudentId] ASC),
     CONSTRAINT [UQ_Students_StudentNumber] UNIQUE NONCLUSTERED ([StudentNumber] ASC),
     CONSTRAINT [UQ_Students_NationalId] UNIQUE NONCLUSTERED ([NationalId] ASC)
+);
+GO
+
+-- 14.ب جدول الوثائق الثبوتية الرسمية العراقية (IdentityDocuments)
+CREATE TABLE [dbo].[IdentityDocuments] (
+    [DocumentId] INT IDENTITY(1,1) NOT NULL,
+    [OwnerType] NVARCHAR(50) NOT NULL, -- Student / Parent / Staff
+    [OwnerId] INT NOT NULL,
+    [DocumentType] NVARCHAR(100) NOT NULL, -- البطاقة الوطنية الموحدة / هوية الأحوال المدنية / شهادة الجنسية العراقية / جواز السفر العراقي
+    [DocumentNumber] NVARCHAR(50) NOT NULL,
+    [IssuingAuthority] NVARCHAR(150) NULL, -- دائرة أحوال الكرخ / الرصافة
+    [IssuingProvince] NVARCHAR(100) NOT NULL DEFAULT N'بغداد',
+    [IssueDate] DATE NULL,
+    [ExpiryDate] DATE NULL,
+    [PageNumber] NVARCHAR(50) NULL, -- الصحيفة
+    [RecordNumber] NVARCHAR(50) NULL, -- السجل
+    [FamilyRecordNumber] NVARCHAR(50) NULL, -- الرقم العائلي
+    [DocumentScanPath] NVARCHAR(500) NULL,
+    [CreatedAt] DATETIME2(7) NOT NULL DEFAULT SYSUTCDATETIME(),
+    [CreatedBy] NVARCHAR(100) NOT NULL DEFAULT N'System',
+    CONSTRAINT [PK_IdentityDocuments] PRIMARY KEY CLUSTERED ([DocumentId] ASC)
 );
 GO
 

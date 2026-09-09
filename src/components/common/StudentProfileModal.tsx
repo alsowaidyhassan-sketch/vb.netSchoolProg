@@ -158,10 +158,24 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Personal Info Box */}
                 <div className="p-4 bg-slate-950/70 border border-slate-800 rounded-xl space-y-2.5 text-xs">
-                  <h4 className="font-bold text-slate-200 border-b border-slate-800 pb-2">المعلومات الشخصية</h4>
+                  <h4 className="font-bold text-slate-200 border-b border-slate-800 pb-2">المعلومات المدنية والشخصية (جمهورية العراق)</h4>
                   <div className="flex justify-between text-slate-300">
-                    <span className="text-slate-500">الاسم الرباعي:</span>
-                    <span className="font-bold">{student.fullName}</span>
+                    <span className="text-slate-500">الاسم الخماسي واللقب:</span>
+                    <span className="font-bold text-emerald-400">{student.fullName}</span>
+                  </div>
+                  {student.motherName && (
+                    <div className="flex justify-between text-slate-300">
+                      <span className="text-slate-500">اسم الأم الثلاثي:</span>
+                      <span className="font-semibold text-sky-300">{student.motherName}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-slate-300">
+                    <span className="text-slate-500">نوع الوثيقة الرسمية:</span>
+                    <span className="font-medium text-amber-300">{student.identityDocumentType || 'البطاقة الوطنية الموحدة'}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-300">
+                    <span className="text-slate-500">رقم الوثيقة / الهوية:</span>
+                    <span className="font-mono font-bold text-white tracking-wider">{student.nationalId}</span>
                   </div>
                   <div className="flex justify-between text-slate-300">
                     <span className="text-slate-500">الجنس:</span>
@@ -169,15 +183,11 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
                   </div>
                   <div className="flex justify-between text-slate-300">
                     <span className="text-slate-500">الجنسية:</span>
-                    <span>{student.nationality}</span>
+                    <span>{student.nationality || 'عراقي'}</span>
                   </div>
                   <div className="flex justify-between text-slate-300">
-                    <span className="text-slate-500">تاريخ الميلاد:</span>
-                    <span className="font-mono">{student.dateOfBirth}</span>
-                  </div>
-                  <div className="flex justify-between text-slate-300">
-                    <span className="text-slate-500">مكان الميلاد:</span>
-                    <span>{student.birthPlace}</span>
+                    <span className="text-slate-500">تاريخ ومكان الولادة:</span>
+                    <span className="font-mono">{student.dateOfBirth} ({student.birthPlace || 'العراق'})</span>
                   </div>
                   <div className="flex justify-between text-slate-300">
                     <span className="text-slate-500">فصيلة الدم:</span>
@@ -346,15 +356,15 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
                       <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-800 text-[11px]">
                         <div>
                           <span className="text-slate-500">القيمة:</span>{' '}
-                          <span className="font-mono font-bold">{inv.finalAmount.toLocaleString()} ر.س</span>
+                          <span className="font-mono font-bold">{inv.finalAmount.toLocaleString()} د.ع</span>
                         </div>
                         <div>
                           <span className="text-slate-500">المدفوع:</span>{' '}
-                          <span className="font-mono font-bold text-emerald-400">{inv.paidAmount.toLocaleString()} ر.س</span>
+                          <span className="font-mono font-bold text-emerald-400">{inv.paidAmount.toLocaleString()} د.ع</span>
                         </div>
                         <div>
                           <span className="text-slate-500">المتبقي:</span>{' '}
-                          <span className="font-mono font-bold text-rose-400">{inv.remainingAmount.toLocaleString()} ر.س</span>
+                          <span className="font-mono font-bold text-rose-400">{inv.remainingAmount.toLocaleString()} د.ع</span>
                         </div>
                       </div>
                     </div>
