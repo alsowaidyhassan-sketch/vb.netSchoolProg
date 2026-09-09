@@ -164,7 +164,7 @@ Namespace Helpers
         End Sub
 
         Private Function GetCloseButtonRect(tabRect As Rectangle) As Rectangle
-            Return New Rectangle(tabRect.Right - 26, tabRect.Y + (tabRect.Height - 18) / 2, 18, 18)
+            Return New Rectangle(tabRect.Right - 26, tabRect.Y + (tabRect.Height - 18) \ 2, 18, 18)
         End Function
 
         Private Sub OnTabMouseDown(sender As Object, e As MouseEventArgs)

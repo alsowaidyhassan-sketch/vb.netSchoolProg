@@ -4,53 +4,70 @@ Namespace Helpers
     ''' <summary>
     ''' مدير الخطوط المركزي للنظام - مع دعم خط كايرو (Cairo) مع بديل آمن (Segoe UI) لوقت التصميم
     ''' </summary>
-    Public Module FontManager
-        Private ReadOnly PrimaryFontFamily As String = "Cairo"
-        Private ReadOnly FallbackFontFamily As String = "Segoe UI"
+    Public NotInheritable Class FontManager
+        Private Sub New()
+        End Sub
 
-        Private Function GetSafeFontFamily() As String
+        Private Shared ReadOnly PrimaryFontFamilyName As String = "Cairo"
+        Private Shared ReadOnly FallbackFontFamilyName As String = "Segoe UI"
+
+        Private Shared _cachedFamily As FontFamily = Nothing
+
+        Private Shared Function GetSafeFontFamily() As FontFamily
+            If _cachedFamily IsNot Nothing Then Return _cachedFamily
             Try
-                Dim family = New FontFamily(PrimaryFontFamily)
-                Return PrimaryFontFamily
+                _cachedFamily = New FontFamily(PrimaryFontFamilyName)
             Catch
-                Return FallbackFontFamily
+                Try
+                    _cachedFamily = New FontFamily(FallbackFontFamilyName)
+                Catch
+                    _cachedFamily = FontFamily.GenericSansSerif
+                End Try
             End Try
+            Return _cachedFamily
         End Function
 
-        Public ReadOnly Property DefaultFont As Font
+        Private Shared ReadOnly _defaultFont As New Font(GetSafeFontFamily(), 10.0F, FontStyle.Regular)
+        Private Shared ReadOnly _titleFont As New Font(GetSafeFontFamily(), 18.0F, FontStyle.Bold)
+        Private Shared ReadOnly _sectionFont As New Font(GetSafeFontFamily(), 14.0F, FontStyle.Bold)
+        Private Shared ReadOnly _buttonFont As New Font(GetSafeFontFamily(), 10.0F, FontStyle.Bold)
+        Private Shared ReadOnly _gridFont As New Font(GetSafeFontFamily(), 10.0F, FontStyle.Regular)
+        Private Shared ReadOnly _smallFont As New Font(GetSafeFontFamily(), 9.0F, FontStyle.Regular)
+
+        Public Shared ReadOnly Property DefaultFont As Font
             Get
-                Return New Font(GetSafeFontFamily(), 10.0F, FontStyle.Regular)
+                Return _defaultFont
             End Get
         End Property
 
-        Public ReadOnly Property TitleFont As Font
+        Public Shared ReadOnly Property TitleFont As Font
             Get
-                Return New Font(GetSafeFontFamily(), 18.0F, FontStyle.Bold)
+                Return _titleFont
             End Get
         End Property
 
-        Public ReadOnly Property SectionFont As Font
+        Public Shared ReadOnly Property SectionFont As Font
             Get
-                Return New Font(GetSafeFontFamily(), 14.0F, FontStyle.Bold)
+                Return _sectionFont
             End Get
         End Property
 
-        Public ReadOnly Property ButtonFont As Font
+        Public Shared ReadOnly Property ButtonFont As Font
             Get
-                Return New Font(GetSafeFontFamily(), 10.0F, FontStyle.Bold)
+                Return _buttonFont
             End Get
         End Property
 
-        Public ReadOnly Property GridFont As Font
+        Public Shared ReadOnly Property GridFont As Font
             Get
-                Return New Font(GetSafeFontFamily(), 10.0F, FontStyle.Regular)
+                Return _gridFont
             End Get
         End Property
 
-        Public ReadOnly Property SmallFont As Font
+        Public Shared ReadOnly Property SmallFont As Font
             Get
-                Return New Font(GetSafeFontFamily(), 9.0F, FontStyle.Regular)
+                Return _smallFont
             End Get
         End Property
-    End Module
+    End Class
 End Namespace
