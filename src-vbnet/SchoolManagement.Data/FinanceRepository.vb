@@ -20,7 +20,7 @@ Namespace Repositories
 
         Public Async Function GetInvoicesAsync(status As String) As Task(Of IEnumerable(Of FeeInvoice)) Implements IFinanceRepository.GetInvoicesAsync
             Using conn = ConnectionManager.CreateConnection()
-                Dim sql As String = "SELECT * FROM [dbo].[FeeInvoices]"
+                Dim sql As String = "SELECT [Id], [InvoiceNumber], [StudentId], [FeeType], [Amount], [Paid], [DueDate], [Status], [IsDeleted] FROM [dbo].[FeeInvoices]"
                 If Not String.IsNullOrEmpty(status) AndAlso status <> "ALL" Then
                     sql &= " WHERE [Status] = @Status"
                 End If
@@ -31,7 +31,7 @@ Namespace Repositories
 
         Public Async Function GetReceiptsAsync(fromDate As DateTime?, toDate As DateTime?) As Task(Of IEnumerable(Of PaymentReceipt)) Implements IFinanceRepository.GetReceiptsAsync
             Using conn = ConnectionManager.CreateConnection()
-                Const sql As String = "SELECT * FROM [dbo].[PaymentReceipts] ORDER BY [Id] DESC;"
+                Const sql As String = "SELECT [Id], [ReceiptNumber], [InvoiceId], [AmountPaid], [PaymentDate], [Notes] FROM [dbo].[PaymentReceipts] ORDER BY [Id] DESC;"
                 Return Await conn.QueryAsync(Of PaymentReceipt)(sql)
             End Using
         End Function

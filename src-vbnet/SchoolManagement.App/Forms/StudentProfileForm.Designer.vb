@@ -29,8 +29,8 @@ Namespace Forms
             Me.pnlFooter = New System.Windows.Forms.Panel()
             Me.btnClose = New SchoolManagement.App.Controls.ModernButton()
             Me.btnPrint = New SchoolManagement.App.Controls.ModernButton()
-            Me.tabProfile = New System.Windows.Forms.TabControl()
-            Me.tabGeneral = New System.Windows.Forms.TabPage()
+            Me.tabProfile = New Krypton.Navigator.KryptonNavigator()
+            Me.tabGeneral = New Krypton.Navigator.KryptonPage()
             Me.cardAddress = New SchoolManagement.App.Controls.ModernCard()
             Me.lblAddressValue = New System.Windows.Forms.Label()
             Me.lblAddressTitle = New System.Windows.Forms.Label()
@@ -40,7 +40,7 @@ Namespace Forms
             Me.cardBasic = New SchoolManagement.App.Controls.ModernCard()
             Me.lblBasicValue = New System.Windows.Forms.Label()
             Me.lblBasicTitle = New System.Windows.Forms.Label()
-            Me.tabFinance = New System.Windows.Forms.TabPage()
+            Me.tabFinance = New Krypton.Navigator.KryptonPage()
             Me.dgvStudentFinance = New SchoolManagement.App.Controls.ModernDataGrid()
             Me.colFinInv = New System.Windows.Forms.DataGridViewTextBoxColumn()
             Me.colFinTitle = New System.Windows.Forms.DataGridViewTextBoxColumn()
@@ -48,7 +48,7 @@ Namespace Forms
             Me.colFinPaid = New System.Windows.Forms.DataGridViewTextBoxColumn()
             Me.colFinRemaining = New System.Windows.Forms.DataGridViewTextBoxColumn()
             Me.colFinStatus = New System.Windows.Forms.DataGridViewTextBoxColumn()
-            Me.tabGrades = New System.Windows.Forms.TabPage()
+            Me.tabGrades = New Krypton.Navigator.KryptonPage()
             Me.dgvStudentGrades = New SchoolManagement.App.Controls.ModernDataGrid()
             Me.colSubj = New System.Windows.Forms.DataGridViewTextBoxColumn()
             Me.colMonth1 = New System.Windows.Forms.DataGridViewTextBoxColumn()
@@ -151,9 +151,9 @@ Namespace Forms
             '
             'tabProfile
             '
-            Me.tabProfile.Controls.Add(Me.tabGeneral)
-            Me.tabProfile.Controls.Add(Me.tabFinance)
-            Me.tabProfile.Controls.Add(Me.tabGrades)
+            Me.tabProfile.Pages.Add(Me.tabGeneral)
+            Me.tabProfile.Pages.Add(Me.tabFinance)
+            Me.tabProfile.Pages.Add(Me.tabGrades)
             Me.tabProfile.Dock = System.Windows.Forms.DockStyle.Fill
             Me.tabProfile.Font = New System.Drawing.Font("Segoe UI", 10.0!)
             Me.tabProfile.Location = New System.Drawing.Point(0, 70)
@@ -458,8 +458,8 @@ Namespace Forms
         Friend WithEvents pnlFooter As System.Windows.Forms.Panel
         Friend WithEvents btnPrint As SchoolManagement.App.Controls.ModernButton
         Friend WithEvents btnClose As SchoolManagement.App.Controls.ModernButton
-        Friend WithEvents tabProfile As System.Windows.Forms.TabControl
-        Friend WithEvents tabGeneral As System.Windows.Forms.TabPage
+        Friend WithEvents tabProfile As Krypton.Navigator.KryptonNavigator
+        Friend WithEvents tabGeneral As Krypton.Navigator.KryptonPage
         Friend WithEvents cardBasic As SchoolManagement.App.Controls.ModernCard
         Friend WithEvents lblBasicTitle As System.Windows.Forms.Label
         Friend WithEvents lblBasicValue As System.Windows.Forms.Label
@@ -469,7 +469,7 @@ Namespace Forms
         Friend WithEvents cardAddress As SchoolManagement.App.Controls.ModernCard
         Friend WithEvents lblAddressTitle As System.Windows.Forms.Label
         Friend WithEvents lblAddressValue As System.Windows.Forms.Label
-        Friend WithEvents tabFinance As System.Windows.Forms.TabPage
+        Friend WithEvents tabFinance As Krypton.Navigator.KryptonPage
         Friend WithEvents dgvStudentFinance As SchoolManagement.App.Controls.ModernDataGrid
         Friend WithEvents colFinInv As System.Windows.Forms.DataGridViewTextBoxColumn
         Friend WithEvents colFinTitle As System.Windows.Forms.DataGridViewTextBoxColumn
@@ -477,7 +477,7 @@ Namespace Forms
         Friend WithEvents colFinPaid As System.Windows.Forms.DataGridViewTextBoxColumn
         Friend WithEvents colFinRemaining As System.Windows.Forms.DataGridViewTextBoxColumn
         Friend WithEvents colFinStatus As System.Windows.Forms.DataGridViewTextBoxColumn
-        Friend WithEvents tabGrades As System.Windows.Forms.TabPage
+        Friend WithEvents tabGrades As Krypton.Navigator.KryptonPage
         Friend WithEvents dgvStudentGrades As SchoolManagement.App.Controls.ModernDataGrid
         Friend WithEvents colSubj As System.Windows.Forms.DataGridViewTextBoxColumn
         Friend WithEvents colMonth1 As System.Windows.Forms.DataGridViewTextBoxColumn

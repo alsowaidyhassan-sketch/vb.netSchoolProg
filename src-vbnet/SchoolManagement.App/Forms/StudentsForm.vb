@@ -3,6 +3,7 @@ Imports System.Diagnostics
 Imports System.Windows.Forms
 Imports SchoolManagement.App.Helpers
 Imports SchoolManagement.Core.Entities
+Imports SchoolManagement.Core.Interfaces
 
 Namespace Forms
     ''' <summary>
@@ -11,14 +12,24 @@ Namespace Forms
     Partial Public Class StudentsForm
         Inherits Form
 
+        Private ReadOnly _studentRepository As IStudentRepository
+
         Public Sub New()
             InitializeComponent()
+            ' Parameterless constructor required by Designer
+        End Sub
 
+        Public Sub New(studentRepository As IStudentRepository)
+            Me.New()
+            
             If DesignModeHelper.IsInDesignMode(Me) Then
                 Return
             End If
 
-            LoadInitialData()
+            _studentRepository = studentRepository
+
+            ' Instead of loading in constructor directly, defer to Form_Load to allow async fetching
+            AddHandler Me.Load, AddressOf OnFormLoad
             WireEvents()
         End Sub
 
@@ -29,31 +40,48 @@ Namespace Forms
             AddHandler txtSearch.TextChanged, AddressOf TxtSearch_TextChanged
         End Sub
 
-        Private Sub LoadInitialData()
-            dgvStudents.Rows.Clear()
-            dgvStudents.Rows.Add("STD-2025-001", "مصطفى علي حسين كاظم الزبيدي", "فاطمة جاسم محمد", "200812345678", "الرابع العلمي - أ", "07801234567", "بغداد - الكرخ (المنصور)", "منتظم")
-            dgvStudents.Rows.Add("STD-2025-002", "سجاد حيدر عبد الحسن حميد السعدي", "زينب مهدي صالح", "200987654321", "الثالث متوسط - ب", "07709876543", "بغداد - الرصافة (الكرادة)", "منتظم")
-            dgvStudents.Rows.Add("STD-2025-003", "أحمد فراس نوري عبد الجبار العامري", "مريم خليل إسماعيل", "200745678912", "السادس العلمي - أ", "07504567890", "أربيل - عينكاوة", "منتظم")
-            dgvStudents.Rows.Add("STD-2025-004", "يوسف عمر خطاب طه الجبوري", "عائشة عبد القادر أحمد", "200898761234", "الرابع العلمي - ج", "07812349876", "الأنبار - الرمادي", "منتظم")
-            dgvStudents.Rows.Add("STD-2025-005", "كرار سلام ضياء مطشر الربيعي", "منى عادل خضير", "201011223344", "الأول متوسط - أ", "07715566778", "البصرة - العشار", "منتظم")
-            lblStudentCount.Text = $"إجمالي عدد الطلاب المسجلين: {dgvStudents.Rows.Count} طلاب"
+        Private Async Sub OnFormLoad(sender As Object, e As EventArgs)
+            Await LoadInitialDataAsync()
         End Sub
 
-        Private Sub BtnAddStudent_Click(sender As Object, e As EventArgs)
-            Using frm As New StudentEditForm()
-                If frm.ShowDialog() = DialogResult.OK Then
-                    Dim s = frm.CurrentStudent
+        Private Async Function LoadInitialDataAsync() As Task
+            Try
+                dgvStudents.Rows.Clear()
+                Dim students = Await _studentRepository.GetAllAsync()
+                
+                For Each s In students
                     dgvStudents.Rows.Add(
-                        If(String.IsNullOrWhiteSpace(s.StudentNumber), $"STD-2025-{dgvStudents.Rows.Count + 1:D3}", s.StudentNumber),
+                        s.StudentNumber,
                         s.FullName,
                         s.MotherName,
                         s.NationalId,
-                        "الرابع العلمي - أ",
+                        "الرابع العلمي - أ", ' Mock class name for now until Class details loaded
                         s.EmergencyContactPhone,
                         $"{s.Province} - {s.District}",
-                        "منتظم"
+                        s.Status
                     )
-                    lblStudentCount.Text = $"إجمالي عدد الطلاب المسجلين: {dgvStudents.Rows.Count} طلاب"
+                Next
+                
+                lblStudentCount.Text = $"إجمالي عدد الطلاب المسجلين: {dgvStudents.Rows.Count} طلاب"
+            Catch ex As Exception
+                MessageBox.Show($"حدث خطأ أثناء تحميل بيانات الطلاب: {ex.Message}", "خطأ", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            End Try
+        End Function
+
+        Private Async Sub BtnAddStudent_Click(sender As Object, e As EventArgs)
+            Using frm As New StudentEditForm()
+                If frm.ShowDialog() = DialogResult.OK Then
+                    Dim s = frm.CurrentStudent
+                    
+                    ' Ensure StudentNumber is unique or generate a new one safely via DB transaction later
+                    s.StudentNumber = If(String.IsNullOrWhiteSpace(s.StudentNumber), $"STD-{DateTime.Now.Year}-{New Random().Next(1000, 9999)}", s.StudentNumber)
+                    
+                    Try
+                        Await _studentRepository.AddAsync(s)
+                        Await LoadInitialDataAsync()
+                    Catch ex As Exception
+                        MessageBox.Show($"تعذر إضافة الطالب: {ex.Message}", "خطأ", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                    End Try
                 End If
             End Using
         End Sub
@@ -68,8 +96,8 @@ Namespace Forms
             Dim studentName = Convert.ToString(row.Cells("colFullName").Value)
             Dim phone = Convert.ToString(row.Cells("colPhone").Value)
 
-            Dim cleanPhone = phone.Replace(" ", "").Replace("-", "")
-            If cleanPhone.StartsWith("07") Then
+            Dim cleanPhone = phone?.Replace(" ", "")?.Replace("-", "")
+            If Not String.IsNullOrEmpty(cleanPhone) AndAlso cleanPhone.StartsWith("07") Then
                 cleanPhone = "964" & cleanPhone.Substring(1)
             End If
 
@@ -103,14 +131,31 @@ Namespace Forms
             End Using
         End Sub
 
-        Private Sub TxtSearch_TextChanged(sender As Object, e As EventArgs)
+        Private Async Sub TxtSearch_TextChanged(sender As Object, e As EventArgs)
             Dim term = txtSearch.Text.Trim().ToLower()
-            For Each row As DataGridViewRow In dgvStudents.Rows
-                Dim name = row.Cells("colFullName").Value?.ToString().ToLower()
-                Dim id = row.Cells("colNationalId").Value?.ToString().ToLower()
-                Dim phone = row.Cells("colPhone").Value?.ToString().ToLower()
-                row.Visible = String.IsNullOrWhiteSpace(term) OrElse name.Contains(term) OrElse id.Contains(term) OrElse phone.Contains(term)
-            Next
+            Try
+                If String.IsNullOrWhiteSpace(term) Then
+                    Await LoadInitialDataAsync()
+                Else
+                    dgvStudents.Rows.Clear()
+                    Dim students = Await _studentRepository.SearchStudentsAsync(term, Nothing, Nothing)
+                    For Each s In students
+                        dgvStudents.Rows.Add(
+                            s.StudentNumber,
+                            s.FullName,
+                            s.MotherName,
+                            s.NationalId,
+                            "الرابع العلمي - أ", ' Mock class name
+                            s.EmergencyContactPhone,
+                            $"{s.Province} - {s.District}",
+                            s.Status
+                        )
+                    Next
+                End If
+            Catch ex As Exception
+                ' Silent fail on search to avoid UI blocking
+                Console.WriteLine($"Search failed: {ex.Message}")
+            End Try
         End Sub
     End Class
 End Namespace
