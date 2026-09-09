@@ -48,14 +48,14 @@ Namespace Forms
         Private Sub BtnSendWhatsAppAlert_Click(sender As Object, e As EventArgs)
             Dim absentCount = 0
             For Each row As DataGridViewRow In dgvAttendance.Rows
-                Dim status = row.Cells("colStatus").Value?.ToString()
+                Dim status = Convert.ToString(row.Cells("colStatus").Value)
                 If status = "غائب" Then
                     absentCount += 1
-                    Dim name = row.Cells("colStudentName").Value?.ToString()
-                    Dim phone = row.Cells("colParentPhone").Value?.ToString()
+                    Dim name = Convert.ToString(row.Cells("colStudentName").Value)
+                    Dim phone = Convert.ToString(row.Cells("colParentPhone").Value)
 
-                    Dim cleanPhone = phone?.Replace(" ", "")?.Replace("-", "")
-                    If cleanPhone?.StartsWith("07") = True Then
+                    Dim cleanPhone = phone.Replace(" ", "").Replace("-", "")
+                    If cleanPhone.StartsWith("07") Then
                         cleanPhone = "964" & cleanPhone.Substring(1)
                     End If
 
@@ -83,7 +83,7 @@ Namespace Forms
         Private Sub UpdateStats(Optional sender As Object = Nothing, Optional e As DataGridViewCellEventArgs = Nothing)
             Dim present = 0, absent = 0, leave = 0
             For Each row As DataGridViewRow In dgvAttendance.Rows
-                Dim st = row.Cells("colStatus").Value?.ToString()
+                Dim st = Convert.ToString(row.Cells("colStatus").Value)
                 Select Case st
                     Case "حاضر" : present += 1
                     Case "غائب" : absent += 1

@@ -201,8 +201,8 @@ Namespace Forms
             End If
 
             Dim row = dgvStudents.SelectedRows(0)
-            Dim studentName = row.Cells("FullName").Value.ToString()
-            Dim phone = row.Cells("ParentPhone").Value.ToString()
+            Dim studentName = Convert.ToString(row.Cells("FullName").Value)
+            Dim phone = Convert.ToString(row.Cells("ParentPhone").Value)
 
             ' إرسال مباشر عبر واتساب برقم عراقي دولي
             Dim cleanPhone = phone.Replace(" ", "").Replace("-", "")

@@ -2,11 +2,10 @@ Imports System
 Imports System.Collections.Generic
 Imports System.Text.RegularExpressions
 
-Namespace Services
-    ''' <summary>
-    ''' خدمة التحقق وتنسيق المعايير العراقية (أرقام الهواتف، الهويات، العملة، والعناوين)
-    ''' </summary>
-    Public Class IraqiValidationService
+''' <summary>
+''' خدمة التحقق وتنسيق المعايير العراقية (أرقام الهواتف، الهويات، العملة، والعناوين)
+''' </summary>
+Public Class IraqiValidationService
         Public Shared ReadOnly IraqiProvinces As New List(Of String) From {
             "بغداد", "البصرة", "نينوى", "أربيل", "النجف الأشرف", "كربلاء المقدسة",
             "كركوك", "الأنبار", "ذي قار", "بابل", "السليمانية", "ديالى",
@@ -138,5 +137,18 @@ Namespace Services
     Public Class IdentityValidationResult
         Public Property IsValid As Boolean
         Public Property ErrorMessage As String = String.Empty
+    End Class
+
+Namespace Services
+    Public Class IraqiValidationService
+        Inherits Global.SchoolManagement.Services.IraqiValidationService
+    End Class
+
+    Public Class PhoneValidationResult
+        Inherits Global.SchoolManagement.Services.PhoneValidationResult
+    End Class
+
+    Public Class IdentityValidationResult
+        Inherits Global.SchoolManagement.Services.IdentityValidationResult
     End Class
 End Namespace

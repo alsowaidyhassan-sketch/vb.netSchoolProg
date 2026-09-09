@@ -65,8 +65,8 @@ Namespace Forms
             End If
 
             Dim row = dgvStudents.SelectedRows(0)
-            Dim studentName = row.Cells("colFullName").Value.ToString()
-            Dim phone = row.Cells("colPhone").Value.ToString()
+            Dim studentName = Convert.ToString(row.Cells("colFullName").Value)
+            Dim phone = Convert.ToString(row.Cells("colPhone").Value)
 
             Dim cleanPhone = phone.Replace(" ", "").Replace("-", "")
             If cleanPhone.StartsWith("07") Then
@@ -91,11 +91,11 @@ Namespace Forms
 
             Dim row = dgvStudents.SelectedRows(0)
             Dim s As New Student With {
-                .StudentNumber = row.Cells("colStudentNumber").Value.ToString(),
-                .FirstName = row.Cells("colFullName").Value.ToString(),
-                .MotherName = row.Cells("colMotherName").Value.ToString(),
-                .NationalId = row.Cells("colNationalId").Value.ToString(),
-                .Phone = row.Cells("colPhone").Value.ToString()
+                .StudentNumber = If(Convert.ToString(row.Cells("colStudentNumber").Value), String.Empty),
+                .FirstName = If(Convert.ToString(row.Cells("colFullName").Value), String.Empty),
+                .MotherName = If(Convert.ToString(row.Cells("colMotherName").Value), String.Empty),
+                .NationalId = If(Convert.ToString(row.Cells("colNationalId").Value), String.Empty),
+                .Phone = If(Convert.ToString(row.Cells("colPhone").Value), String.Empty)
             }
 
             Using profileFrm As New StudentProfileForm(s)

@@ -51,6 +51,8 @@ Namespace Forms
             Me.lblArea = New System.Windows.Forms.Label()
             Me.txtDistrict = New SchoolManagement.App.Controls.ModernTextBox()
             Me.lblDistrict = New System.Windows.Forms.Label()
+            Me.txtSubDistrict = New SchoolManagement.App.Controls.ModernTextBox()
+            Me.lblSubDistrict = New System.Windows.Forms.Label()
             Me.cboProvince = New System.Windows.Forms.ComboBox()
             Me.lblProvince = New System.Windows.Forms.Label()
             Me.lblParentCarrier = New System.Windows.Forms.Label()
@@ -304,6 +306,8 @@ Namespace Forms
             Me.grpAddressAndContact.Controls.Add(Me.lblArea)
             Me.grpAddressAndContact.Controls.Add(Me.txtDistrict)
             Me.grpAddressAndContact.Controls.Add(Me.lblDistrict)
+            Me.grpAddressAndContact.Controls.Add(Me.txtSubDistrict)
+            Me.grpAddressAndContact.Controls.Add(Me.lblSubDistrict)
             Me.grpAddressAndContact.Controls.Add(Me.cboProvince)
             Me.grpAddressAndContact.Controls.Add(Me.lblProvince)
             Me.grpAddressAndContact.Controls.Add(Me.lblParentCarrier)
@@ -457,6 +461,29 @@ Namespace Forms
             Me.lblDistrict.Size = New System.Drawing.Size(45, 15)
             Me.lblDistrict.TabIndex = 5
             Me.lblDistrict.Text = "القضاء:"
+            '
+            'txtSubDistrict
+            '
+            Me.txtSubDistrict.BackColor = System.Drawing.Color.FromArgb(30, 41, 59)
+            Me.txtSubDistrict.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
+            Me.txtSubDistrict.Font = New System.Drawing.Font("Segoe UI", 10.0!)
+            Me.txtSubDistrict.ForeColor = System.Drawing.Color.White
+            Me.txtSubDistrict.Location = New System.Drawing.Point(460, 150)
+            Me.txtSubDistrict.Name = "txtSubDistrict"
+            Me.txtSubDistrict.PlaceholderText = "الناحية"
+            Me.txtSubDistrict.Size = New System.Drawing.Size(180, 25)
+            Me.txtSubDistrict.TabIndex = 7
+            '
+            'lblSubDistrict
+            '
+            Me.lblSubDistrict.AutoSize = True
+            Me.lblSubDistrict.Font = New System.Drawing.Font("Segoe UI", 8.5!)
+            Me.lblSubDistrict.ForeColor = System.Drawing.Color.FromArgb(203, 213, 225)
+            Me.lblSubDistrict.Location = New System.Drawing.Point(595, 130)
+            Me.lblSubDistrict.Name = "lblSubDistrict"
+            Me.lblSubDistrict.Size = New System.Drawing.Size(45, 15)
+            Me.lblSubDistrict.TabIndex = 6
+            Me.lblSubDistrict.Text = "الناحية:"
             '
             'cboProvince
             '
@@ -914,6 +941,8 @@ Namespace Forms
         Friend WithEvents cboProvince As System.Windows.Forms.ComboBox
         Friend WithEvents lblDistrict As System.Windows.Forms.Label
         Friend WithEvents txtDistrict As SchoolManagement.App.Controls.ModernTextBox
+        Friend WithEvents lblSubDistrict As System.Windows.Forms.Label
+        Friend WithEvents txtSubDistrict As SchoolManagement.App.Controls.ModernTextBox
         Friend WithEvents lblArea As System.Windows.Forms.Label
         Friend WithEvents txtArea As SchoolManagement.App.Controls.ModernTextBox
         Friend WithEvents lblMahalla As System.Windows.Forms.Label

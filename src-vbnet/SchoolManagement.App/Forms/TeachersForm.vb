@@ -60,11 +60,11 @@ Namespace Forms
 
             Dim row = dgvTeachers.SelectedRows(0)
             Dim t As New Teacher With {
-                .StaffId = If(row.Cells("colStaffId").Value?.ToString(), String.Empty),
-                .FullName = If(row.Cells("colTeacherName").Value?.ToString(), String.Empty),
-                .FirstName = If(row.Cells("colTeacherName").Value?.ToString(), String.Empty),
-                .Specialization = If(row.Cells("colSpecialization").Value?.ToString(), String.Empty),
-                .Phone = If(row.Cells("colPhone").Value?.ToString(), String.Empty)
+                .StaffId = If(Convert.ToString(row.Cells("colStaffId").Value), String.Empty),
+                .FullName = If(Convert.ToString(row.Cells("colTeacherName").Value), String.Empty),
+                .FirstName = If(Convert.ToString(row.Cells("colTeacherName").Value), String.Empty),
+                .Specialization = If(Convert.ToString(row.Cells("colSpecialization").Value), String.Empty),
+                .Phone = If(Convert.ToString(row.Cells("colPhone").Value), String.Empty)
             }
 
             Using frm As New TeacherEditForm(t)
@@ -79,9 +79,9 @@ Namespace Forms
         Private Sub TxtSearch_TextChanged(sender As Object, e As EventArgs)
             Dim term = txtSearch.Text.Trim().ToLower()
             For Each row As DataGridViewRow In dgvTeachers.Rows
-                Dim name = row.Cells("colTeacherName").Value?.ToString().ToLower()
-                Dim spec = row.Cells("colSpecialization").Value?.ToString().ToLower()
-                Dim phone = row.Cells("colPhone").Value?.ToString().ToLower()
+                Dim name = Convert.ToString(row.Cells("colTeacherName").Value).ToLower()
+                Dim spec = Convert.ToString(row.Cells("colSpecialization").Value).ToLower()
+                Dim phone = Convert.ToString(row.Cells("colPhone").Value).ToLower()
                 row.Visible = String.IsNullOrWhiteSpace(term) OrElse name.Contains(term) OrElse spec.Contains(term) OrElse phone.Contains(term)
             Next
         End Sub

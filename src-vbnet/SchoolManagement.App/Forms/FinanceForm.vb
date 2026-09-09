@@ -42,9 +42,9 @@ Namespace Forms
         End Sub
 
         Private Sub OnFilterChanged(sender As Object, e As EventArgs)
-            Dim filter = cboFilterStatus.SelectedItem?.ToString()
+            Dim filter = Convert.ToString(cboFilterStatus.SelectedItem)
             For Each row As DataGridViewRow In dgvFinance.Rows
-                Dim st = row.Cells("colInvStatus").Value?.ToString()
+                Dim st = Convert.ToString(row.Cells("colInvStatus").Value)
                 row.Visible = (cboFilterStatus.SelectedIndex = 0) OrElse (st = filter)
             Next
         End Sub

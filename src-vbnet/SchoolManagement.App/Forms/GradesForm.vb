@@ -52,10 +52,10 @@ Namespace Forms
             Dim row = dgvGrades.Rows(e.RowIndex)
 
             Dim m1 As Double, m2 As Double, mid As Double, fin As Double
-            Double.TryParse(row.Cells("colMonth1").Value?.ToString(), m1)
-            Double.TryParse(row.Cells("colMonth2").Value?.ToString(), m2)
-            Double.TryParse(row.Cells("colMidYear").Value?.ToString(), mid)
-            Double.TryParse(row.Cells("colFinalExam").Value?.ToString(), fin)
+            Double.TryParse(Convert.ToString(row.Cells("colMonth1").Value), m1)
+            Double.TryParse(Convert.ToString(row.Cells("colMonth2").Value), m2)
+            Double.TryParse(Convert.ToString(row.Cells("colMidYear").Value), mid)
+            Double.TryParse(Convert.ToString(row.Cells("colFinalExam").Value), fin)
 
             Dim term1Quest = (m1 + m2) / 2.0
             row.Cells("colTerm1Quest").Value = term1Quest.ToString("F1")
@@ -91,7 +91,7 @@ Namespace Forms
 
             For Each row As DataGridViewRow In dgvGrades.Rows
                 Dim avg As Double
-                If Double.TryParse(row.Cells("colFinalAverage").Value?.ToString(), avg) Then
+                If Double.TryParse(Convert.ToString(row.Cells("colFinalAverage").Value), avg) Then
                     sum += avg
                     If avg > maxGrade Then maxGrade = avg
                     If avg < minGrade Then minGrade = avg
